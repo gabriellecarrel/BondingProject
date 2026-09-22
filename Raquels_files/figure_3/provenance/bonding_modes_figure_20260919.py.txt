@@ -1,0 +1,194 @@
+"""Linked panels for the same atom-pair response modes; candidate, not production."""
+from pathlib import Path
+import hashlib
+import json
+import socket
+import sys
+import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+from matplotlib.patches import FancyArrowPatch
+
+ROOT=Path('/Users/raquelqueiroz')
+OUT=ROOT/'orlt_atlas_work'
+ATT=ROOT/'obsidian-vault/RQLAB/Projects/Bonding/attachments'
+STYLE=ROOT/'Library/CloudStorage/GoogleDrive-rpa.queiroz@gmail.com/My Drive/Code/lab-style'
+sys.path.insert(0,str(STYLE))
+from lab_style import apply_style
+apply_style('bonding',usetex=False)
+FONT=20
+plt.rcParams.update({'font.family':'DejaVu Sans','font.size':FONT,
+    'axes.labelsize':FONT,'axes.titlesize':FONT,'xtick.labelsize':FONT,
+    'ytick.labelsize':FONT,'legend.fontsize':FONT,'mathtext.fontset':'cm',
+    'text.usetex':False,'svg.fonttype':'none','axes.spines.top':False,
+    'axes.spines.right':False})
+MATS=('NaCl','Diamond','CsI3','GeTe')
+LABEL={'NaCl':'NaCl','Diamond':'Diamond','CsI3':r'CsI$_3$','GeTe':'GeTe'}
+COLOR={'NaCl':'#0077bb','Diamond':'#009988','CsI3':'#ee7733','GeTe':'#cc3311'}
+STEM='bonding_modes_20260919_r1'
+MESH={'NaCl':24,'Diamond':24,'CsI3':12,'GeTe':24}
+
+
+def input_path(material):
+    return OUT/f'bonding_modes_20260919_v1_{material}_mesh{MESH[material]}.npz'
+
+
+def sha(path):
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def mode_blocks(e):
+    """Numerically unresolved clusters; report the explicit grouping tolerance."""
+    # Show the diagonal of each block projector, not a gauge-dependent member.
+    groups=[];first=0
+    for j in range(1,len(e)):
+        if e[j-1]-e[j] > max(1e-8*e[0],1e-4*max(e[j-1],e[j])):
+            groups.append(np.arange(first,j));first=j
+    groups.append(np.arange(first,len(e)))
+    return groups
+
+
+def describe_block(z,ids):
+    e=z['eigenvalues'][ids];u=z['eigenvectors'][:,ids]
+    diagonal=np.sum(abs(u)**2*e[None,:],axis=1)
+    p=diagonal/diagonal.sum()
+    key=z['process_keys'];natom=len(z['atom_frac'])
+    occupied=np.bincount(key[:,0],weights=p,minlength=natom)
+    empty=np.bincount(key[:,1],weights=p,minlength=natom)
+    chi=float(abs(occupied-empty).sum()/2)
+    r=np.linalg.norm(z['nuclear_displacement_A'],axis=1)
+    order=np.argsort(r);r90=float(r[order[np.searchsorted(np.cumsum(p[order]),.9)]])
+    q=float(z['mode_metric_weights'][ids].sum())
+    return dict(ids=ids,p=p,r90=r90,chi=chi,q=q,
+                occupied=occupied,empty=empty,trace=float(e.sum()))
+
+
+def portrait(ax,z,block,mat):
+    """One periodic representative per physical reverse pair; weight, not phase."""
+    keys=z['process_keys'];rev=z['reverse'];prob=block['p']
+    reps=np.flatnonzero(np.arange(len(rev))<=rev)
+    pairweight=prob[reps]+prob[rev[reps]]*(reps!=rev[reps])
+    order=np.argsort(pairweight)[::-1]
+    count=min(14,int(np.searchsorted(np.cumsum(pairweight[order]),.7)+1))
+    chosen=reps[order[:count]]
+    frac=float((prob[chosen]+prob[rev[chosen]]*(chosen!=rev[chosen])).sum())
+    atoms=z['atom_frac'];lat=z['lattice'];symbols=z['atom_symbols'].astype(str)
+    nodes={};bonds=[]
+    for p in chosen:
+        A,B,*R=keys[p]
+        ka=(int(A),0,0,0);kb=(int(B),*map(int,R))
+        nodes[ka]=atoms[A]@lat;nodes[kb]=(atoms[B]+R)@lat
+        bonds.append((ka,kb,float(prob[p]),float(prob[rev[p]])))
+    # Fixed orthographic view in Cartesian coordinates; no nonlinear distortion.
+    az=np.deg2rad(-66 if mat=='CsI3' else 34);el=np.deg2rad(20)
+    basis=np.array([[-np.sin(az),np.cos(az),0.],
+        [-np.sin(el)*np.cos(az),-np.sin(el)*np.sin(az),np.cos(el)]])
+    nodekeys=list(nodes);xyz=np.array(list(nodes.values()));xy=xyz@basis.T
+    xy-=(xy.min(axis=0)+xy.max(axis=0))/2
+    span=max(np.ptp(xy[:,0]),np.ptp(xy[:,1]),1e-4)
+    xy/=span
+    xy_by=dict(zip(nodekeys,xy))
+    maximum=max(max(x[2:]) for x in bonds)
+    for ka,kb,forward,backward in sorted(bonds,key=lambda x:x[2]+x[3]):
+        a=xy_by[ka];b=xy_by[kb];d=b-a;length=np.linalg.norm(d)
+        if length<1e-5:
+            ax.scatter(a[0],a[1],s=100+550*forward/maximum,c=COLOR[mat],alpha=.20,edgecolors='none',zorder=1)
+            continue
+        normal=np.array([-d[1],d[0]])/length
+        ax.plot([a[0],b[0]],[a[1],b[1]],color='#cccccc',lw=1,zorder=1)
+        # Opposite arrows sit on the same bond, with widths showing |u_p|².
+        for start,end,w,offset in [(a,b,forward,.007),(b,a,backward,.007)]:
+            if w/maximum<.01:continue
+            delta=end-start;n=np.array([-delta[1],delta[0]])/length
+            x=start+.22*delta+offset*n;y=start+.78*delta+offset*n
+            ax.add_patch(FancyArrowPatch(x,y,arrowstyle='-|>',
+                mutation_scale=9+7*np.sqrt(w/maximum),
+                linewidth=.6+3.2*np.sqrt(w/maximum),
+                color=COLOR[mat],alpha=.55+.45*np.sqrt(w/maximum),zorder=2))
+    elements=sorted(set(symbols[k[0]] for k in nodekeys))
+    for element in elements:
+        mask=np.array([symbols[k[0]]==element for k in nodekeys])
+        face='white' if element==elements[0] and len(elements)>1 else '#444444'
+        ax.scatter(xy[mask,0],xy[mask,1],s=100,c=face,edgecolors='#333333',lw=1.3,zorder=3)
+    # Only an element key, rather than labels on every overlapping periodic image.
+    ax.set_xlim(-.69,.69);ax.set_ylim(-.62,.63);ax.set_aspect('equal');ax.axis('off')
+    ax.set_title(LABEL[mat],loc='left',pad=12)
+    n=len(block['ids']);tag=f"mode {int(block['ids'][0])+1}" if n==1 else f"{n}-mode block"
+    ax.text(0,-.06,tag,transform=ax.transAxes,ha='left',fontsize=FONT)
+    ax.text(0,-.18,f'{100*frac:.0f}% shown',transform=ax.transAxes,fontsize=FONT)
+    return {'eigenmode_indices_one_based':(block['ids']+1).tolist(),
+        'selected_pair_count':len(chosen),'shown_block_trace_fraction':frac,
+        'elements':elements,'physical_span_A':span,
+        'scope':'Periodic occupied-empty pair representatives; arrows show right-mode endpoint pair weights. Onsite pairs have halos. Relative phases are not displayed.'}
+
+
+def main():
+    assert 'rqlab-studio' in socket.gethostname()
+    data={};reports={}
+    for m in MATS:
+        p=input_path(m)
+        data[m]=dict(np.load(p));reports[m]=json.loads(p.with_suffix('.json').read_text())
+    fig=plt.figure(figsize=(15.4,10.1))
+    grid=fig.add_gridspec(2,12,left=.085,right=.985,bottom=.15,top=.91,hspace=.57,wspace=2.15,height_ratios=[1,1.0])
+    ax=fig.add_subplot(grid[0,0:4]);bx=fig.add_subplot(grid[0,4:8]);cx=fig.add_subplot(grid[0,8:12])
+    records={}
+    for mat in MATS:
+        z=data[mat];ev=z['eigenvalues'];q=z['mode_metric_weights']
+        assert np.all(ev>=-1e-10*ev[0]);ev=np.maximum(ev,0)
+        z['eigenvalues']=ev
+        trace=ev.sum();g=q.sum();rank=np.arange(1,len(ev)+1)
+        groups=[idx for idx in mode_blocks(ev) if ev[idx].sum()>0]
+        group_q=np.array([q[idx].sum() for idx in groups]);response_order=np.argsort(group_q)[::-1]
+        response_rank=np.cumsum([len(groups[i]) for i in response_order])
+        ctrace=np.cumsum(ev)/reports[mat]['full_trace'];cmetric=np.cumsum(group_q[response_order])/g
+        ax.plot(rank,100*ctrace,color=COLOR[mat],lw=2.5,label=LABEL[mat])
+        missing=max(0,1-trace/reports[mat]['full_trace'])
+        ax.fill_between(rank,100*ctrace,100*np.minimum(1,ctrace+missing),color=COLOR[mat],alpha=.13,rasterized=True)
+        bx.plot(response_rank,100*cmetric,color=COLOR[mat],lw=2.5)
+        n90=int(response_rank[np.searchsorted(cmetric,.9)])
+        bx.scatter(n90,90,s=65,facecolors='white',edgecolors=COLOR[mat],lw=2,zorder=4)
+        blocks=[describe_block(z,idx) for idx in groups if q[idx].sum()>g*1e-8]
+        best=max(blocks,key=lambda b:b['q'])
+        rp=OUT/f'bonding_mode_realspace_20260919_v1_{mat}.npz';right=dict(np.load(rp))
+        rmeta=json.loads(rp.with_suffix('.json').read_text())
+        np.testing.assert_array_equal(right['mode_indices'],best['ids'])
+        best.update(p=right['probabilities'],r90=float(right['r90_A']),chi=float(right['endpoint_asymmetry']))
+        cx.scatter(best['r90'],best['chi'],s=120+400*best['q']/g,c=COLOR[mat],edgecolors='white',lw=1.0,zorder=5)
+        px=fig.add_subplot(grid[1,3*MATS.index(mat):3*MATS.index(mat)+3])
+        picture=portrait(px,right,best,mat)
+        px.text(-.18,1.08,chr(68+MATS.index(mat)),transform=px.transAxes,fontweight='bold',fontsize=FONT+2)
+        records[mat]={'trace':float(trace),'restricted_metric':float(g),'modes_for90pct_restricted_metric':n90,
+            'modes_for90pct_trace':int(np.searchsorted(ctrace,.9)+1),
+            'largest_response_block':{'metric_fraction':best['q']/g,'r90_A':best['r90'],
+                'endpoint_total_variation':best['chi'],**picture},
+            'input_npz_sha256':sha(input_path(mat)),
+            'full_metric':reports[mat]['full_metric'],
+            'selected_metric_fraction':reports[mat]['selected_metric_fraction'],
+            'full_trace':reports[mat]['full_trace'],
+            'mode_outer_shell_probability':rmeta['outer_two_Fourier_shell_probability'],
+            'block_relative_eigenvalue_spread':float(np.ptp(ev[best['ids']])/np.mean(ev[best['ids']])),
+            'realspace_npz_sha256':sha(rp)}
+    for a,title,letter in [(ax,'Mode weight','A'),(bx,'Response carried','B')]:
+        a.set_xscale('log');a.set_ylim(0,103);a.set_yticks([0,50,100]);a.set_xlabel('Number of modes')
+        a.set_title(title,loc='left',pad=16);a.text(-.16,1.16,letter,transform=a.transAxes,fontsize=FONT+2,fontweight='bold')
+    ax.set_ylabel('Cumulative full trace (%)');bx.set_ylabel('Candidate metric (%)')
+    ax.legend(frameon=False,loc='lower right',fontsize=FONT)
+    cx.set_title('Mode character',loc='left',pad=16);cx.set_xlabel('90% pair separation (Å)')
+    cx.set_ylabel('Endpoint asymmetry');cx.set_ylim(-.12,1.06);cx.set_yticks([0,.5,1])
+    cx.text(-.18,1.16,'C',transform=cx.transAxes,fontsize=FONT+2,fontweight='bold')
+    paths=[]
+    for ext in ('pdf','png','svg'):
+        p=OUT/f'{STEM}.{ext}';fig.savefig(p,dpi=180,facecolor='white');paths.append(str(p))
+    plt.close(fig)
+    receipt={'host':socket.gethostname(),'script_sha256':sha(__file__),'materials':records,
+        'numerical_block_tolerance':'successive eigenvalue difference <= max(1e-8 lambda_max,1e-4 local lambda)',
+        'scatter_rule':'Largest-response complete eigenvalue block per material; circle area increases with its candidate metric fraction. Same block is reconstructed in each portrait.',
+        'response_mode_count':'Sort complete numerical eigenvalue blocks by their total metric contribution; count all constituent modes. Individual contributions inside a degenerate block are not ranked.',
+        'scope':'Atom-pair channel preview after reversal-closed trace restriction, not historical full orbital-pair spectrum. The same right-mode block is reconstructed in real space for pair separation, endpoint asymmetry and portraits. This is relative occupied-empty separation, not localization of a periodic mode center. Marginals are excitation-kernel weights, not atomic charges; no established ionicity claimed.',
+        'paths':paths,'production_figures_overwritten':False}
+    (OUT/f'{STEM}.json').write_text(json.dumps(receipt,indent=2)+'\n')
+    print(json.dumps(receipt,indent=2))
+
+
+if __name__=='__main__':main()

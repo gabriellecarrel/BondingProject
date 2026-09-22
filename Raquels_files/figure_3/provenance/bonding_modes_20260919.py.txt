@@ -1,0 +1,259 @@
+"""Bounded atom-pair channel SVD preview, preserving physical hopping images.
+
+Rows are (atomic occupied-side endpoint, atomic empty-side endpoint, image R).
+Orbitals on each endpoint are coherently summed BEFORE the decomposition.
+Thus these are atom-pair channel modes, not a full orbital-pair SVD. The
+translation-summed q=0 modes have internal bond separations, not a local
+spatial extent. The selected principal Gram is an explicit 99%-trace preview.
+"""
+import os
+for key in ('OPENBLAS_NUM_THREADS', 'OMP_NUM_THREADS', 'VECLIB_MAXIMUM_THREADS', 'MKL_NUM_THREADS'):
+    os.environ[key] = '1'
+os.environ['PYTHONDONTWRITEBYTECODE'] = '1'
+import argparse
+import itertools
+import json
+import socket
+import sys
+import time
+from pathlib import Path
+
+LEGACY = Path('/Users/raquelqueiroz/Library/CloudStorage/GoogleDrive-rpa.queiroz@gmail.com/My Drive/Queiroz Lab/CodeBase/Bonding/mode_decomposition')
+sys.path.insert(0, str(LEGACY))
+import numpy as np
+import atomic_velocity_links_20260918 as source
+
+OUT = Path('/Users/raquelqueiroz/orlt_atlas_work')
+PREFIX = 'bonding_modes_20260919_v1'
+MESH = {'NaCl': 24, 'Diamond': 24, 'CsI3': 12, 'GeTe': 24}
+
+
+def save_json(path, data):
+    path.write_text(json.dumps(data, default=source.image.native, indent=2) + '\n')
+
+
+def select_rows(diagonal, reverse, threshold):
+    """Largest individual selfweights, then complete reversal and cutoff ties."""
+    order = np.argsort(-diagonal, kind='stable')
+    stop = np.searchsorted(np.cumsum(diagonal[order]), threshold * diagonal.sum())
+    boundary = diagonal[order[stop]]
+    # Complete numerical ties so a degenerate boundary cannot select arbitrary
+    # members merely because of array order. Reversal closure is also explicit.
+    selected = np.flatnonzero(diagonal >= boundary * (1 - 1e-10))
+    selected = np.unique(np.r_[selected, reverse[selected]])
+    inverse = np.full(len(diagonal), -1, dtype=int)
+    inverse[selected] = np.arange(len(selected))
+    local_reverse = inverse[reverse[selected]]
+    assert np.all(local_reverse >= 0)
+    assert np.array_equal(local_reverse[local_reverse], np.arange(len(selected)))
+    return selected, local_reverse, float(boundary)
+
+
+def stream_gram(d, mesh, selected, batch_k=32, max_k=None):
+    nrow = len(selected)
+    channels = 3 * d['nocc'] * (d['n'] - d['nocc'])
+    block = np.empty((nrow, batch_k * channels), dtype=complex)
+    gram = np.zeros((nrow, nrow), dtype=complex)
+    full_metric_xyz = np.zeros(3)
+    selected_metric_xyz = np.zeros(3)
+    full_trace = 0.0
+    full_cross_rows = np.zeros(nrow, complex)
+    independent_diag = np.zeros(nrow)
+    count = 0
+    fill = 0
+    gemm_time = 0.0
+    generation_time = 0.0
+    min_gap = np.inf
+    start = time.monotonic()
+    for k in itertools.product(np.arange(mesh) / mesh, repeat=3):
+        if max_k is not None and count >= max_k:
+            break
+        tick = time.monotonic()
+        D, total, e, U, H = source.at_k(d, np.asarray(k))
+        b = (1j * d['disp'][selected, :, None, None] * D[selected, None, :, :]).reshape(nrow, channels)
+        chosen = b.sum(axis=0).reshape(total.shape)
+        full_metric_xyz += np.sum(abs(total)**2, axis=(1, 2))
+        selected_metric_xyz += np.sum(abs(chosen)**2, axis=(1, 2))
+        full_trace += float(d['d2'] @ np.sum(abs(D.reshape(len(D), -1))**2, axis=1))
+        full_cross_rows += b @ total.ravel().conj()
+        independent_diag += np.sum(abs(b)**2, axis=1)
+        min_gap = min(min_gap, float(e[d['nocc']] - e[d['nocc'] - 1]))
+        assert (e <= d['mu']).sum() == d['nocc']
+        block[:, fill * channels:(fill + 1) * channels] = b
+        fill += 1
+        count += 1
+        generation_time += time.monotonic() - tick
+        if fill == batch_k:
+            tick = time.monotonic()
+            gram += block @ block.conj().T
+            gemm_time += time.monotonic() - tick
+            fill = 0
+        if count % 2048 == 0:
+            print(d['material'], count, 'elapsed', time.monotonic() - start, flush=True)
+    if fill:
+        tick = time.monotonic()
+        used = block[:, :fill * channels]
+        gram += used @ used.conj().T
+        gemm_time += time.monotonic() - tick
+    norm = count * d['nocc']
+    gram /= norm
+    full_metric_xyz /= norm
+    selected_metric_xyz /= norm
+    independent_diag /= norm
+    full_cross_rows /= norm
+    full_trace /= norm
+    assert min_gap > 0
+    return gram, dict(full_metric_xyz=full_metric_xyz,
+        selected_metric_xyz=selected_metric_xyz, full_trace=full_trace,
+        full_cross_rows=full_cross_rows, independent_diag=independent_diag,
+        n_k=count, min_gap_eV=min_gap, generation_s=generation_time,
+        gram_accumulation_s=gemm_time, accumulation_s=time.monotonic() - start)
+
+
+def mode_diagnostics(values, vectors, displacement, keys, reverse, natom):
+    weight = abs(vectors)**2
+    radius = np.linalg.norm(displacement, axis=1)
+    order = np.argsort(radius, kind='stable')
+    cum = np.cumsum(weight[order], axis=0)
+    r90 = radius[order[np.argmax(cum >= .9, axis=0)]]
+    r50 = radius[order[np.argmax(cum >= .5, axis=0)]]
+    rms = np.sqrt(np.sum(weight * radius[:, None]**2, axis=0))
+    del cum
+    source_marginals = np.stack([weight[keys[:, 0] == a].sum(axis=0) for a in range(natom)])
+    target_marginals = np.stack([weight[keys[:, 1] == a].sum(axis=0) for a in range(natom)])
+    endpoint_l1 = .5 * np.sum(abs(source_marginals - target_marginals), axis=0)
+    pair = np.flatnonzero(np.arange(len(reverse)) < reverse)
+    eta = np.sum(abs(weight[pair] - weight[reverse[pair]]), axis=0)
+    metric_weights = values * abs(vectors.sum(axis=0))**2
+    gaps = values[:-1] - values[1:]
+    relative_gaps = gaps / np.maximum(values[:-1], np.finfo(float).eps * values[0])
+    return dict(mode_metric_weights=metric_weights, mode_bond_separation_r90_A=r90,
+        mode_bond_separation_r50_A=r50, mode_bond_separation_rms_A=rms,
+        mode_source_atom_marginals=source_marginals, mode_target_atom_marginals=target_marginals,
+        mode_endpoint_total_variation=endpoint_l1, mode_pair_reversal_asymmetry=eta,
+        eigenvalue_gaps=gaps, eigenvalue_relative_gaps=relative_gaps)
+
+
+def run(material, threshold=.99, batch_k=32, max_k=None):
+    assert 'rqlab-studio' in socket.gethostname()
+    mesh = MESH[material]
+    suffix = f'benchmark{max_k}' if max_k else f'mesh{mesh}'
+    path = OUT / f'{PREFIX}_{material}_{suffix}.json'
+    assert not path.exists(), path
+    started = time.monotonic()
+    refpath = OUT / f'atomic_velocity_links_20260918_v1_{material}_mesh{mesh}.npz'
+    refjson = refpath.with_suffix('.json')
+    old = np.load(refpath)
+    oldmeta = json.loads(refjson.read_text())
+    selected, reverse, boundary = select_rows(old['directed_selfweights'], old['reverse'], threshold)
+    d = source.setup(material)
+    np.testing.assert_array_equal(d['keys'], old['process_keys'])
+    np.testing.assert_allclose(d['disp'], old['nuclear_displacement_A'], rtol=0, atol=1e-12)
+    assert d['provenance'] == oldmeta['input_provenance']
+    inputs = [Path(__file__), Path(source.__file__), Path(source.image.__file__), Path(source.base.__file__), refpath, refjson]
+    record = dict(status='started', material=material, host=socket.gethostname(), mesh=mesh,
+        grid='unshifted j/M in each primitive reciprocal direction',
+        scope='Atom-pair channel preview: orbital processes summed coherently before SVD; physical images retained; exact nuclear-site diagonal position. Periodic q=0 patterns, not localized modes or the full orbital-pair SVD.',
+        selection='Largest directed selfweights through target trace, complete cutoff ties at relative 1e-10, then close under physical pair reversal.',
+        target_trace_fraction=threshold, selection_boundary_selfweight=boundary,
+        n_selected=len(selected), n_full=len(d['keys']), nocc=d['nocc'],
+        column_count=3 * mesh**3 * d['nocc'] * (d['n'] - d['nocc']),
+        input_provenance=d['provenance'], source_and_input_sha256={str(p):source.base.digest(p) for p in inputs},
+        mode_definitions={
+            'eigenvalues':'lambda_s = singular_value_s(B_selected)^2; descending, roundoff-negative values clipped only after a PSD test',
+            'metric_weights':'lambda_s * abs(sum_p u_ps)^2; sum is coherently restricted metric, not full metric',
+            'range':'r90 from sum_{|d_p|<=r} abs(u_ps)^2; internal physical bond separation, not localization length',
+            'endpoint_marginals':'sum abs(u_ps)^2 over occupied-side atomic label A or empty-side atomic label B; no image localization or established ionicity claim',
+            'reversal_asymmetry':'sum over unordered reversed pairs of abs(abs(u_p)^2 - abs(u_reverse)^2); in [0,1]',
+            'degeneracy':'individual modes inside a degenerate block are arbitrary; use block-projector weights and total block response for display'})
+    save_json(path, record)
+    gram, result = stream_gram(d, mesh, selected, batch_k, max_k)
+    checks = dict(hermiticity_max=float(abs(gram - gram.conj().T).max()),
+        diagonal_independent_max=float(abs(gram.diagonal().real - result['independent_diag']).max()),
+        selected_metric_independent_error=float(abs(gram.sum() - result['selected_metric_xyz'].sum())))
+    gram = (gram + gram.conj().T) / 2
+    full_metric = float(result['full_metric_xyz'].sum())
+    selected_metric = float(result['selected_metric_xyz'].sum())
+    selected_trace = float(gram.trace().real)
+    full_trace = float(result['full_trace'])
+    record.update(full_metric=full_metric, selected_metric=selected_metric,
+        full_trace=full_trace, selected_trace=selected_trace,
+        selected_trace_fraction=selected_trace/full_trace,
+        selected_metric_fraction=selected_metric/full_metric,
+        selected_full_metric_cross_contraction=float(result['full_cross_rows'].sum().real),
+        omitted_response_norm_squared=float(full_metric - 2 * result['full_cross_rows'].sum().real + selected_metric),
+        timings={k:result[k] for k in ('generation_s','gram_accumulation_s','accumulation_s')},
+        checks=checks, n_k=result['n_k'], min_gap_eV=result['min_gap_eV'])
+    if max_k:
+        record['projected_full_accumulation_s'] = result['accumulation_s'] * mesh**3 / max_k
+        record['status'] = 'benchmark-complete-no-eigendecomposition'
+        save_json(path, record)
+        print(json.dumps(record, default=source.image.native), flush=True)
+        return record
+    checks.update(saved_diagonal_max=float(abs(gram.diagonal().real - old['directed_selfweights'][selected]).max()),
+        saved_full_cross_rows_max=float(abs(result['full_cross_rows'] - old['directed_signed_rows'][selected]).max()),
+        saved_full_metric_xyz_max=float(abs(result['full_metric_xyz'] - old['metric_xyz']).max()),
+        saved_full_trace_error=float(abs(full_trace - old['directed_selfweights'].sum())))
+    assert max(checks.values()) < 1e-9, checks
+    tick = time.monotonic()
+    values, vectors = np.linalg.eigh(gram)
+    values = values[::-1].copy()
+    vectors = vectors[:, ::-1].copy()
+    record['timings']['eigendecomposition_s'] = time.monotonic() - tick
+    checks['minimum_raw_eigenvalue'] = float(values.min())
+    assert values.min() >= -1e-10 * max(values[0], 1)
+    raw_values = values.copy()
+    values = np.maximum(values, 0)
+    diag = mode_diagnostics(values, vectors, d['disp'][selected], d['keys'][selected], reverse, len(d['atoms']))
+    checks['eigenvalue_trace_error'] = float(abs(values.sum() - selected_trace))
+    checks['eigenmode_metric_error'] = float(abs(diag['mode_metric_weights'].sum() - selected_metric))
+    checks['eigenvalue_frobenius_error'] = float(abs(np.dot(values, values) - np.vdot(gram, gram).real))
+    rng = np.random.default_rng(719)
+    probe = rng.normal(size=(len(selected), 4)) + 1j * rng.normal(size=(len(selected), 4))
+    actual = gram @ probe
+    rebuilt = vectors @ (values[:, None] * (vectors.conj().T @ probe))
+    checks['random_probe_reconstruction_relative'] = float(np.linalg.norm(actual - rebuilt) / np.linalg.norm(actual))
+    test_modes = np.unique(np.r_[np.arange(min(32, len(selected))), np.arange(max(0, len(selected)-8), len(selected))])
+    u = vectors[:, test_modes]
+    checks['sampled_eigenpair_residual_relative'] = float(np.linalg.norm(gram @ u - u * values[test_modes]) / np.linalg.norm(gram))
+    checks['sampled_orthogonality_max'] = float(abs(u.conj().T @ u - np.eye(len(test_modes))).max())
+    assert checks['random_probe_reconstruction_relative'] < 1e-9
+    assert checks['eigenmode_metric_error'] < 1e-8
+    assert checks['eigenvalue_trace_error'] < 1e-8
+    arrays = dict(eigenvalues=values, raw_eigenvalues=raw_values, eigenvectors=vectors,
+        process_keys=d['keys'][selected], nuclear_displacement_A=d['disp'][selected],
+        reverse=reverse, full_process_indices=selected,
+        directed_selfweights=gram.diagonal().real, selected_full_metric_rows=result['full_cross_rows'],
+        atom_frac=d['atoms'], atom_symbols=d['symbols'], lattice=d['lat'],
+        orbital_to_atom=d['oa'], raw_to_rehomed_shifts=d['shifts'],
+        full_metric=full_metric, selected_metric=selected_metric,
+        full_trace=full_trace, selected_trace=selected_trace,
+        full_metric_xyz=result['full_metric_xyz'], selected_metric_xyz=result['selected_metric_xyz'], **diag)
+    target = path.with_suffix('.npz')
+    np.savez_compressed(target, **arrays)
+    record.update(status='complete', arrays={'path':str(target),'sha256':source.base.digest(target)},
+        top_trace_mode_metric_fraction_of_full=float(diag['mode_metric_weights'][0]/full_metric),
+        brightest_metric_mode_index=int(np.argmax(diag['mode_metric_weights'])),
+        full_metric_capture_in_first_10_trace_modes=float(diag['mode_metric_weights'][:10].sum()/full_metric),
+        full_trace_capture_in_first_10_trace_modes=float(values[:10].sum()/full_trace),
+        elapsed_s=time.monotonic()-started)
+    save_json(path, record)
+    print('COMPLETE', material, path, 'elapsed', record['elapsed_s'], flush=True)
+    return record
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('materials', nargs='+', choices=list(MESH))
+    ap.add_argument('--max-k', type=int)
+    ap.add_argument('--batch-k', type=int, default=32)
+    ap.add_argument('--threshold', type=float, default=.99)
+    args = ap.parse_args()
+    start = time.monotonic()
+    for material in args.materials:
+        run(material, args.threshold, args.batch_k, args.max_k)
+    print('BATCH_SECONDS', time.monotonic() - start, flush=True)
+
+
+if __name__ == '__main__':
+    main()

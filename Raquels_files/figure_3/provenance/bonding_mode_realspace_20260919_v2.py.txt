@@ -1,0 +1,112 @@
+"""Reconstruct right singular modes as periodic occupied-empty pair kernels."""
+import os
+for name in ('OPENBLAS_NUM_THREADS','OMP_NUM_THREADS','VECLIB_MAXIMUM_THREADS','MKL_NUM_THREADS'):
+    os.environ[name]='1'
+from pathlib import Path
+import sys,json,hashlib,socket,time,itertools,argparse
+import numpy as np
+ROOT=Path('/Users/raquelqueiroz');OUT=ROOT/'orlt_atlas_work'
+LEGACY=ROOT/'Library/CloudStorage/GoogleDrive-rpa.queiroz@gmail.com/My Drive/Queiroz Lab/CodeBase/Bonding/mode_decomposition'
+sys.path.insert(0,str(LEGACY))
+import atomic_velocity_links_20260918 as source
+MESH={'NaCl':24,'Diamond':24,'CsI3':12,'GeTe':24}
+
+
+def sha(p):return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+
+
+def blocks(e):
+    groups=[];first=0
+    for j in range(1,len(e)):
+        if e[j-1]-e[j]>max(1e-8*e[0],1e-4*max(e[j-1],e[j])):
+            groups.append(np.arange(first,j));first=j
+    return groups+[np.arange(first,len(e))]
+
+
+def run(mat):
+    assert 'rqlab-studio' in socket.gethostname();start=time.time();mesh=MESH[mat]
+    p=OUT/f'bonding_modes_20260919_v1_{mat}_mesh{mesh}.npz';z=np.load(p)
+    e=z['eigenvalues'];q=z['mode_metric_weights'];groups=blocks(e)
+    ids=max(groups,key=lambda g:q[g].sum());values=e[ids];u=z['eigenvectors'][:,ids]
+    d=source.setup(mat);selection=z['full_process_indices'];disp=d['disp'][selection]
+    np.testing.assert_array_equal(z['process_keys'],d['keys'][selection])
+    n=d['n'];s=len(ids);nk=mesh**3;nocc=d['nocc']
+    shape=(mesh,mesh,mesh,s,3,n,n)
+    GiB=np.prod(shape)*16/2**30
+    assert GiB<8,('unexpected mode block exceeds memory bound',GiB)
+    print(mat,'mode ids',ids.tolist(),'kernel GiB',round(GiB,3),flush=True)
+    kernels=np.empty(shape,complex);right_norm=np.zeros(s);gauge_error=0.;orth_error=0.
+    for count,index in enumerate(itertools.product(range(mesh),repeat=3)):
+        k=np.array(index)/mesh;D,total,energies,U,H=source.at_k(d,k)
+        W=1j*np.einsum('ps,pov,pm->smov',u.conj(),D[selection],disp,optimize=True)
+        W/=np.sqrt(nk*nocc*values)[:,None,None,None]
+        O=U[:,:nocc];V=U[:,nocc:]
+        T=np.einsum('ao,smov,bv->smab',O,W,V.conj(),optimize=True)
+        right_norm+=np.sum(abs(W)**2,axis=(1,2,3));kernels[index]=T
+        if count in (0,17):
+            rng=np.random.default_rng(927+count);po=np.exp(1j*rng.uniform(-np.pi,np.pi,nocc));pv=np.exp(1j*rng.uniform(-np.pi,np.pi,n-nocc))
+            Wg=W*po.conj()[None,None,:,None]*pv[None,None,None,:]
+            Tg=np.einsum('ao,smov,bv->smab',O*po,Wg,(V*pv).conj(),optimize=True)
+            gauge_error=max(gauge_error,float(abs(T-Tg).max()))
+            orth_error=max(orth_error,float(abs(np.sum(abs(T)**2,axis=(1,2,3))-np.sum(abs(W)**2,axis=(1,2,3))).max()))
+        if (count+1)%3000==0:print(mat,count+1,'seconds',round(time.time()-start,1),flush=True)
+    np.testing.assert_allclose(right_norm,1,rtol=2e-9,atol=2e-9)
+    assert gauge_error<1e-10 and orth_error<1e-10
+    # H(k)=sum_R H(R)exp(+2pi i k.R), so the inverse coefficient uses fftn.
+    real=np.fft.fftn(kernels,axes=(0,1,2),norm='ortho');del kernels
+    norm_real=np.sum(abs(real)**2,axis=(0,1,2,4,5,6))
+    np.testing.assert_allclose(norm_real,1,rtol=2e-9,atol=2e-9)
+    # lambda-weighted block diagonal is invariant to rotations within a degenerate block.
+    weight=np.sum(abs(real)**2*(values/values.sum())[None,None,None,:,None,None,None],axis=(3,4));del real
+    shifts=(np.fft.fftfreq(mesh)*mesh).round().astype(int)
+    R=np.array(list(itertools.product(shifts,repeat=3)));weight=weight.reshape(nk,n,n)
+    oa=d['oa'];natom=len(d['atoms']);atom_weight=np.zeros((nk,natom,natom))
+    for a in range(n):
+        for b in range(n):atom_weight[:,oa[a],oa[b]]+=weight[:,a,b]
+    active=d['active'];rows=[];prob=[];delta=[]
+    for A in active:
+        for B in active:
+            rows.append(np.c_[np.full(nk,A),np.full(nk,B),R])
+            prob.append(atom_weight[:,A,B]);delta.append((R+d['atoms'][B]-d['atoms'][A])@d['lat'])
+    keys=np.concatenate(rows).astype(int);prob=np.concatenate(prob);delta=np.concatenate(delta)
+    assert abs(prob.sum()-1)<2e-9
+    distances=np.linalg.norm(delta,axis=1);ix=np.argsort(distances);cum=np.cumsum(prob[ix])
+    quantiles={str(int(100*x)):float(distances[ix[np.searchsorted(cum,x)]]) for x in (.5,.9,.99)}
+    outer=np.max(abs(keys[:,2:]),axis=1)>=mesh//2-1
+    occupied=np.bincount(keys[:,0],weights=prob,minlength=natom);empty=np.bincount(keys[:,1],weights=prob,minlength=natom)
+    asym=float(abs(occupied-empty).sum()/2)
+    lookup={tuple(key):i for i,key in enumerate(keys)}
+    reverse=np.array([lookup.get((int(B),int(A),*map(int,-np.asarray(r))),-1) for A,B,*r in keys])
+    # Keep each actual FFT image, including unpaired Nyquist images, in the
+    # plotting output. Do not manufacture its missing unwrapped reverse.
+    kept=np.flatnonzero(reverse>=0);old_to_new=np.full(len(keys),-1,int);old_to_new[kept]=np.arange(len(kept));rev=old_to_new[reverse[kept]]
+    stem=OUT/f'bonding_mode_realspace_20260919_v2_{mat}'
+    np.savez_compressed(stem.with_suffix('.npz'),process_keys=keys,probabilities=prob,
+        nuclear_displacement_A=delta,reverse=reverse,
+        orbital_pair_probability=weight.sum(axis=0),orbital_to_atom=oa,atom_frac=d['atoms'],atom_symbols=d['symbols'],lattice=d['lat'],
+        occupied_marginal=occupied,empty_marginal=empty,mode_indices=ids,mode_eigenvalues=values,
+        sorted_distances_A=distances[ix],sorted_cumulative_probability=cum,
+        endpoint_asymmetry=asym,r90_A=quantiles['90'])
+    record={'host':socket.gethostname(),'material':mat,'mesh':mesh,'mode_indices_zero_based':ids.tolist(),
+        'mode_metric_fraction_of_selected':float(q[ids].sum()/q.sum()),
+        'right_mode_norms':right_norm.tolist(),'real_space_mode_norms':norm_real.tolist(),
+        'band_phase_gauge_max_error':gauge_error,'orbital_isometry_max_error':orth_error,
+        'distance_quantiles_A':quantiles,'endpoint_total_variation':asym,
+        'outer_two_Fourier_shell_probability':float(prob[outer].sum()),
+        'portrait_omitted_unpaired_boundary_probability':0.,
+        'unpaired_boundary_probability_retained':float(prob[reverse<0].sum()),
+        'occupied_marginal':occupied.tolist(),'empty_marginal':empty.tolist(),
+        'total_probability':float(prob.sum()),'runtime_s':time.time()-start,
+        'source_sha256':{str(Path(__file__)):sha(__file__),str(p):sha(p)},
+        'scope':'Right singular-mode occupied-empty relative-coordinate kernel, weighted within the brightest whole eigenvalue block. Uniform zero-q periodic mode, no localization of its center; no mode-range convergence claim.',
+        'formula':'w_s=u_s^dagger B(k)/sqrt(Nk*nocc*lambda_s); T_s,ab=sum_ov O_ao w_s,ov V_bv*; unitary FFT(k->R); normalized block probability=sum_s,mu lambda_s |T_s,ab^mu(R)|^2 /sum_s lambda_s.'}
+    stem.with_suffix('.json').write_text(json.dumps(record,indent=2)+'\n');print('DONE',mat,json.dumps(record),flush=True)
+
+
+if __name__=='__main__':
+    a=argparse.ArgumentParser();a.add_argument('materials',nargs='+',choices=list(MESH));args=a.parse_args()
+    # Exact one-image control fixes FFT sign and unit normalization.
+    k=np.arange(8)/8;example=np.exp(2j*np.pi*2*k)/np.sqrt(8)
+    transformed=np.fft.fft(example,norm='ortho')
+    np.testing.assert_allclose(abs(transformed)**2,np.eye(8)[2],atol=1e-14)
+    for m in args.materials:run(m)

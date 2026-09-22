@@ -1,0 +1,596 @@
+{
+  "figure_4/tables/drawing_data.npz": {
+    "benzene_positions": {
+      "shape": [
+        6,
+        2
+      ],
+      "dtype": "float64"
+    },
+    "benzene_projector": {
+      "shape": [
+        6,
+        6
+      ],
+      "dtype": "complex128"
+    },
+    "benzene_marker": {
+      "shape": [
+        6
+      ],
+      "dtype": "float64"
+    },
+    "coronene_positions": {
+      "shape": [
+        24,
+        2
+      ],
+      "dtype": "float64"
+    },
+    "coronene_projector": {
+      "shape": [
+        24,
+        24
+      ],
+      "dtype": "complex128"
+    },
+    "coronene_marker": {
+      "shape": [
+        24
+      ],
+      "dtype": "float64"
+    },
+    "flake96_positions": {
+      "shape": [
+        96,
+        2
+      ],
+      "dtype": "float64"
+    },
+    "flake96_projector": {
+      "shape": [
+        96,
+        96
+      ],
+      "dtype": "complex128"
+    },
+    "flake96_marker": {
+      "shape": [
+        96
+      ],
+      "dtype": "float64"
+    }
+  },
+  "figure_4/data/spectra.npz": {
+    "Egrid": {
+      "shape": [
+        12001
+      ],
+      "dtype": "float64"
+    },
+    "benzene_de": {
+      "shape": [
+        9
+      ],
+      "dtype": "float64"
+    },
+    "benzene_w": {
+      "shape": [
+        9
+      ],
+      "dtype": "float64"
+    },
+    "coronene_de": {
+      "shape": [
+        144
+      ],
+      "dtype": "float64"
+    },
+    "coronene_w": {
+      "shape": [
+        144
+      ],
+      "dtype": "float64"
+    },
+    "flake864_de": {
+      "shape": [
+        186624
+      ],
+      "dtype": "float64"
+    },
+    "flake864_w": {
+      "shape": [
+        186624
+      ],
+      "dtype": "float64"
+    },
+    "bulk_de": {
+      "shape": [
+        230400
+      ],
+      "dtype": "float64"
+    },
+    "bulk_w": {
+      "shape": [
+        230400
+      ],
+      "dtype": "float64"
+    }
+  },
+  "figure_3/data/bonding_mode_realspace_20260919_v2_Diamond.npz": {
+    "process_keys": {
+      "shape": [
+        55296,
+        5
+      ],
+      "dtype": "int64"
+    },
+    "probabilities": {
+      "shape": [
+        55296
+      ],
+      "dtype": "float64"
+    },
+    "nuclear_displacement_A": {
+      "shape": [
+        55296,
+        3
+      ],
+      "dtype": "float64"
+    },
+    "reverse": {
+      "shape": [
+        55296
+      ],
+      "dtype": "int64"
+    },
+    "orbital_pair_probability": {
+      "shape": [
+        8,
+        8
+      ],
+      "dtype": "float64"
+    },
+    "orbital_to_atom": {
+      "shape": [
+        8
+      ],
+      "dtype": "int64"
+    },
+    "atom_frac": {
+      "shape": [
+        2,
+        3
+      ],
+      "dtype": "float64"
+    },
+    "atom_symbols": {
+      "shape": [
+        2
+      ],
+      "dtype": "<U1"
+    },
+    "lattice": {
+      "shape": [
+        3,
+        3
+      ],
+      "dtype": "float64"
+    },
+    "occupied_marginal": {
+      "shape": [
+        2
+      ],
+      "dtype": "float64"
+    },
+    "empty_marginal": {
+      "shape": [
+        2
+      ],
+      "dtype": "float64"
+    },
+    "mode_indices": {
+      "shape": [
+        1
+      ],
+      "dtype": "int64"
+    },
+    "mode_eigenvalues": {
+      "shape": [
+        1
+      ],
+      "dtype": "float64"
+    },
+    "sorted_distances_A": {
+      "shape": [
+        55296
+      ],
+      "dtype": "float64"
+    },
+    "sorted_cumulative_probability": {
+      "shape": [
+        55296
+      ],
+      "dtype": "float64"
+    },
+    "endpoint_asymmetry": {
+      "shape": [],
+      "dtype": "float64"
+    },
+    "r90_A": {
+      "shape": [],
+      "dtype": "float64"
+    }
+  },
+  "figure_3/data/bonding_mode_realspace_20260919_v2_CsI3.npz": {
+    "process_keys": {
+      "shape": [
+        248832,
+        5
+      ],
+      "dtype": "int64"
+    },
+    "probabilities": {
+      "shape": [
+        248832
+      ],
+      "dtype": "float64"
+    },
+    "nuclear_displacement_A": {
+      "shape": [
+        248832,
+        3
+      ],
+      "dtype": "float64"
+    },
+    "reverse": {
+      "shape": [
+        248832
+      ],
+      "dtype": "int64"
+    },
+    "orbital_pair_probability": {
+      "shape": [
+        36,
+        36
+      ],
+      "dtype": "float64"
+    },
+    "orbital_to_atom": {
+      "shape": [
+        36
+      ],
+      "dtype": "int64"
+    },
+    "atom_frac": {
+      "shape": [
+        16,
+        3
+      ],
+      "dtype": "float64"
+    },
+    "atom_symbols": {
+      "shape": [
+        16
+      ],
+      "dtype": "<U2"
+    },
+    "lattice": {
+      "shape": [
+        3,
+        3
+      ],
+      "dtype": "float64"
+    },
+    "occupied_marginal": {
+      "shape": [
+        16
+      ],
+      "dtype": "float64"
+    },
+    "empty_marginal": {
+      "shape": [
+        16
+      ],
+      "dtype": "float64"
+    },
+    "mode_indices": {
+      "shape": [
+        1
+      ],
+      "dtype": "int64"
+    },
+    "mode_eigenvalues": {
+      "shape": [
+        1
+      ],
+      "dtype": "float64"
+    },
+    "sorted_distances_A": {
+      "shape": [
+        248832
+      ],
+      "dtype": "float64"
+    },
+    "sorted_cumulative_probability": {
+      "shape": [
+        248832
+      ],
+      "dtype": "float64"
+    },
+    "endpoint_asymmetry": {
+      "shape": [],
+      "dtype": "float64"
+    },
+    "r90_A": {
+      "shape": [],
+      "dtype": "float64"
+    }
+  },
+  "figure_3/data/bonding_modes_20260919_v1_CsI3_mesh12.npz": {
+    "eigenvalues": {
+      "shape": [
+        144
+      ],
+      "dtype": "float64"
+    },
+    "mode_metric_weights": {
+      "shape": [
+        144
+      ],
+      "dtype": "float64"
+    }
+  },
+  "figure_3/data/bonding_mode_realspace_20260919_v2_GeTe.npz": {
+    "process_keys": {
+      "shape": [
+        55296,
+        5
+      ],
+      "dtype": "int64"
+    },
+    "probabilities": {
+      "shape": [
+        55296
+      ],
+      "dtype": "float64"
+    },
+    "nuclear_displacement_A": {
+      "shape": [
+        55296,
+        3
+      ],
+      "dtype": "float64"
+    },
+    "reverse": {
+      "shape": [
+        55296
+      ],
+      "dtype": "int64"
+    },
+    "orbital_pair_probability": {
+      "shape": [
+        8,
+        8
+      ],
+      "dtype": "float64"
+    },
+    "orbital_to_atom": {
+      "shape": [
+        8
+      ],
+      "dtype": "int64"
+    },
+    "atom_frac": {
+      "shape": [
+        2,
+        3
+      ],
+      "dtype": "float64"
+    },
+    "atom_symbols": {
+      "shape": [
+        2
+      ],
+      "dtype": "<U2"
+    },
+    "lattice": {
+      "shape": [
+        3,
+        3
+      ],
+      "dtype": "float64"
+    },
+    "occupied_marginal": {
+      "shape": [
+        2
+      ],
+      "dtype": "float64"
+    },
+    "empty_marginal": {
+      "shape": [
+        2
+      ],
+      "dtype": "float64"
+    },
+    "mode_indices": {
+      "shape": [
+        1
+      ],
+      "dtype": "int64"
+    },
+    "mode_eigenvalues": {
+      "shape": [
+        1
+      ],
+      "dtype": "float64"
+    },
+    "sorted_distances_A": {
+      "shape": [
+        55296
+      ],
+      "dtype": "float64"
+    },
+    "sorted_cumulative_probability": {
+      "shape": [
+        55296
+      ],
+      "dtype": "float64"
+    },
+    "endpoint_asymmetry": {
+      "shape": [],
+      "dtype": "float64"
+    },
+    "r90_A": {
+      "shape": [],
+      "dtype": "float64"
+    }
+  },
+  "figure_3/data/bonding_modes_20260919_v1_NaCl_mesh24.npz": {
+    "eigenvalues": {
+      "shape": [
+        2840
+      ],
+      "dtype": "float64"
+    },
+    "mode_metric_weights": {
+      "shape": [
+        2840
+      ],
+      "dtype": "float64"
+    }
+  },
+  "figure_3/data/bonding_mode_realspace_20260919_v2_NaCl.npz": {
+    "process_keys": {
+      "shape": [
+        55296,
+        5
+      ],
+      "dtype": "int64"
+    },
+    "probabilities": {
+      "shape": [
+        55296
+      ],
+      "dtype": "float64"
+    },
+    "nuclear_displacement_A": {
+      "shape": [
+        55296,
+        3
+      ],
+      "dtype": "float64"
+    },
+    "reverse": {
+      "shape": [
+        55296
+      ],
+      "dtype": "int64"
+    },
+    "orbital_pair_probability": {
+      "shape": [
+        7,
+        7
+      ],
+      "dtype": "float64"
+    },
+    "orbital_to_atom": {
+      "shape": [
+        7
+      ],
+      "dtype": "int64"
+    },
+    "atom_frac": {
+      "shape": [
+        2,
+        3
+      ],
+      "dtype": "float64"
+    },
+    "atom_symbols": {
+      "shape": [
+        2
+      ],
+      "dtype": "<U2"
+    },
+    "lattice": {
+      "shape": [
+        3,
+        3
+      ],
+      "dtype": "float64"
+    },
+    "occupied_marginal": {
+      "shape": [
+        2
+      ],
+      "dtype": "float64"
+    },
+    "empty_marginal": {
+      "shape": [
+        2
+      ],
+      "dtype": "float64"
+    },
+    "mode_indices": {
+      "shape": [
+        1
+      ],
+      "dtype": "int64"
+    },
+    "mode_eigenvalues": {
+      "shape": [
+        1
+      ],
+      "dtype": "float64"
+    },
+    "sorted_distances_A": {
+      "shape": [
+        55296
+      ],
+      "dtype": "float64"
+    },
+    "sorted_cumulative_probability": {
+      "shape": [
+        55296
+      ],
+      "dtype": "float64"
+    },
+    "endpoint_asymmetry": {
+      "shape": [],
+      "dtype": "float64"
+    },
+    "r90_A": {
+      "shape": [],
+      "dtype": "float64"
+    }
+  },
+  "figure_3/data/bonding_modes_20260919_v1_GeTe_mesh24.npz": {
+    "eigenvalues": {
+      "shape": [
+        92
+      ],
+      "dtype": "float64"
+    },
+    "mode_metric_weights": {
+      "shape": [
+        92
+      ],
+      "dtype": "float64"
+    }
+  },
+  "figure_3/data/bonding_modes_20260919_v1_Diamond_mesh24.npz": {
+    "eigenvalues": {
+      "shape": [
+        304
+      ],
+      "dtype": "float64"
+    },
+    "mode_metric_weights": {
+      "shape": [
+        304
+      ],
+      "dtype": "float64"
+    }
+  }
+}

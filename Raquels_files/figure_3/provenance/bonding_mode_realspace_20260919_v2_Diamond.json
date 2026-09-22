@@ -1,0 +1,42 @@
+{
+  "host": "rqlab-studio.phys.columbia.edu",
+  "material": "Diamond",
+  "mesh": 24,
+  "mode_indices_zero_based": [
+    0
+  ],
+  "mode_metric_fraction_of_selected": 0.9513854593168715,
+  "right_mode_norms": [
+    1.0000000000000067
+  ],
+  "real_space_mode_norms": [
+    1.0000000000000022
+  ],
+  "band_phase_gauge_max_error": 1.7347376210093877e-18,
+  "orbital_isometry_max_error": 5.421010862427522e-20,
+  "distance_quantiles_A": {
+    "50": 1.5418478604367059,
+    "90": 3.880232023557857,
+    "99": 6.661544119923495
+  },
+  "endpoint_total_variation": 5.551115123125783e-17,
+  "outer_two_Fourier_shell_probability": 8.244224226916599e-07,
+  "portrait_omitted_unpaired_boundary_probability": 0.0,
+  "unpaired_boundary_probability_retained": 1.8306528874380302e-07,
+  "occupied_marginal": [
+    0.500000000000001,
+    0.5000000000000019
+  ],
+  "empty_marginal": [
+    0.500000000000001,
+    0.500000000000002
+  ],
+  "total_probability": 1.0000000000000022,
+  "runtime_s": 46.97351598739624,
+  "source_sha256": {
+    "/Users/raquelqueiroz/Library/CloudStorage/GoogleDrive-rpa.queiroz@gmail.com/My Drive/Code/Bonding/bonding_mode_realspace_20260919_v2.py": "dea6b070df3ea5c7c3ddcd93086c0e07de1dcda62ed9e33d89fbc21ce612813b",
+    "/Users/raquelqueiroz/orlt_atlas_work/bonding_modes_20260919_v1_Diamond_mesh24.npz": "01dc8f4e309b0d7b8c187d2b2afa8fc5393ad38152d77cef743540a9c4099146"
+  },
+  "scope": "Right singular-mode occupied-empty relative-coordinate kernel, weighted within the brightest whole eigenvalue block. Uniform zero-q periodic mode, no localization of its center; no mode-range convergence claim.",
+  "formula": "w_s=u_s^dagger B(k)/sqrt(Nk*nocc*lambda_s); T_s,ab=sum_ov O_ao w_s,ov V_bv*; unitary FFT(k->R); normalized block probability=sum_s,mu lambda_s |T_s,ab^mu(R)|^2 /sum_s lambda_s."
+}

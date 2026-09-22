@@ -1,0 +1,295 @@
+[
+  {
+    "file": "style/bonding.mplstyle",
+    "source_filename": "bonding.mplstyle",
+    "source_sha256": "ea6c0111814e025ad13af66d58c516c0d00947ce285e44110f0b0daac7a86d01",
+    "sha256": "ea6c0111814e025ad13af66d58c516c0d00947ce285e44110f0b0daac7a86d01",
+    "operation": "byte-identical copy"
+  },
+  {
+    "file": "figure_3/data/bonding_mode_realspace_20260919_v2_NaCl.npz",
+    "source_filename": "bonding_mode_realspace_20260919_v2_NaCl.npz",
+    "source_sha256": "52bc3c5e199d44342fa23abb96e226d09bf8505a9a5c4b1a73629482bd84bda3",
+    "sha256": "52bc3c5e199d44342fa23abb96e226d09bf8505a9a5c4b1a73629482bd84bda3",
+    "operation": "byte-identical copy"
+  },
+  {
+    "file": "figure_3/data/bonding_modes_20260919_v1_NaCl_mesh24.npz",
+    "source_filename": "bonding_modes_20260919_v1_NaCl_mesh24.npz",
+    "source_sha256": "66e2a59cb51bd41ea3c556f2dc3e0decbfa8ac8ea770ba55666fa0ece43dbb10",
+    "sha256": "16771cc7e06f26ea44cf2bb83e0d79f736ab8a1ef153aa76aec40140edd288ae",
+    "operation": "exact array subset; omitted unused full eigenvectors and diagnostics",
+    "arrays": [
+      "eigenvalues",
+      "mode_metric_weights"
+    ]
+  },
+  {
+    "file": "figure_3/data/bonding_modes_20260919_v1_NaCl_mesh24.json",
+    "source_filename": "bonding_modes_20260919_v1_NaCl_mesh24.json",
+    "source_sha256": "aff9d3409aaa71b6592436129ed338345d704393b35482082dac3355889153c7",
+    "sha256": "aff9d3409aaa71b6592436129ed338345d704393b35482082dac3355889153c7",
+    "operation": "byte-identical copy"
+  },
+  {
+    "file": "figure_3/data/bonding_mode_realspace_20260919_v2_Diamond.npz",
+    "source_filename": "bonding_mode_realspace_20260919_v2_Diamond.npz",
+    "source_sha256": "b7f5890b2916a5877604a775f92fc4fff7240efb74f4ea5780c15495a3d9f04a",
+    "sha256": "b7f5890b2916a5877604a775f92fc4fff7240efb74f4ea5780c15495a3d9f04a",
+    "operation": "byte-identical copy"
+  },
+  {
+    "file": "figure_3/data/bonding_modes_20260919_v1_Diamond_mesh24.npz",
+    "source_filename": "bonding_modes_20260919_v1_Diamond_mesh24.npz",
+    "source_sha256": "01dc8f4e309b0d7b8c187d2b2afa8fc5393ad38152d77cef743540a9c4099146",
+    "sha256": "010765f54d8698e96644b1c0d215ecdc304161f0e3548ce16e680a6f74086af3",
+    "operation": "exact array subset; omitted unused full eigenvectors and diagnostics",
+    "arrays": [
+      "eigenvalues",
+      "mode_metric_weights"
+    ]
+  },
+  {
+    "file": "figure_3/data/bonding_modes_20260919_v1_Diamond_mesh24.json",
+    "source_filename": "bonding_modes_20260919_v1_Diamond_mesh24.json",
+    "source_sha256": "4d228ff5e6c24cb7a7ef70a8d992260f47c1780c6a0a53cd00d1e67266fd3aff",
+    "sha256": "4d228ff5e6c24cb7a7ef70a8d992260f47c1780c6a0a53cd00d1e67266fd3aff",
+    "operation": "byte-identical copy"
+  },
+  {
+    "file": "figure_3/data/bonding_mode_realspace_20260919_v2_CsI3.npz",
+    "source_filename": "bonding_mode_realspace_20260919_v2_CsI3.npz",
+    "source_sha256": "18a9d4d8ba8ced339424227a1518c60655be7acaff13ce9da741dc17670f4476",
+    "sha256": "18a9d4d8ba8ced339424227a1518c60655be7acaff13ce9da741dc17670f4476",
+    "operation": "byte-identical copy"
+  },
+  {
+    "file": "figure_3/data/bonding_modes_20260919_v1_CsI3_mesh12.npz",
+    "source_filename": "bonding_modes_20260919_v1_CsI3_mesh12.npz",
+    "source_sha256": "129a80b234c47ce17dd1921bafd5151139fae3c5b11556190bbbc2d90140487e",
+    "sha256": "c86b445086f38470c1b42ef18bb15c7232bafc1d97c9ef1be4890af92ec046f3",
+    "operation": "exact array subset; omitted unused full eigenvectors and diagnostics",
+    "arrays": [
+      "eigenvalues",
+      "mode_metric_weights"
+    ]
+  },
+  {
+    "file": "figure_3/data/bonding_modes_20260919_v1_CsI3_mesh12.json",
+    "source_filename": "bonding_modes_20260919_v1_CsI3_mesh12.json",
+    "source_sha256": "c325d6d1779af9b4d19ad5e051b8f3400048f846505b2ff69135b2d0dbdf4598",
+    "sha256": "c325d6d1779af9b4d19ad5e051b8f3400048f846505b2ff69135b2d0dbdf4598",
+    "operation": "byte-identical copy"
+  },
+  {
+    "file": "figure_3/data/bonding_mode_realspace_20260919_v2_GeTe.npz",
+    "source_filename": "bonding_mode_realspace_20260919_v2_GeTe.npz",
+    "source_sha256": "eaa9f47d6d8e27f8f30957cbd10256dd9079ff4636501fdc3383d3be286c724b",
+    "sha256": "eaa9f47d6d8e27f8f30957cbd10256dd9079ff4636501fdc3383d3be286c724b",
+    "operation": "byte-identical copy"
+  },
+  {
+    "file": "figure_3/data/bonding_modes_20260919_v1_GeTe_mesh24.npz",
+    "source_filename": "bonding_modes_20260919_v1_GeTe_mesh24.npz",
+    "source_sha256": "7fdd601ed2eb8f4f7040a4542e54d3fa139f3aaa73a9a5d78cc34fe881beb98a",
+    "sha256": "e7ad7c85e65155b2bec2aaaad7253367e1de227cc8f9bfbadfe2b58884492794",
+    "operation": "exact array subset; omitted unused full eigenvectors and diagnostics",
+    "arrays": [
+      "eigenvalues",
+      "mode_metric_weights"
+    ]
+  },
+  {
+    "file": "figure_3/data/bonding_modes_20260919_v1_GeTe_mesh24.json",
+    "source_filename": "bonding_modes_20260919_v1_GeTe_mesh24.json",
+    "source_sha256": "55ca8555effda313069363e294046b2c480f695f10f4037a567d22131b0f2169",
+    "sha256": "55ca8555effda313069363e294046b2c480f695f10f4037a567d22131b0f2169",
+    "operation": "byte-identical copy"
+  },
+  {
+    "file": "figure_3/provenance/bonding_matched_mode_figures_20260919_r3.py.txt",
+    "source_filename": "bonding_matched_mode_figures_20260919_r3.py",
+    "source_sha256": "adb7e7ecddf3abe523a6bddcdffa0d3c71302d3c17203fa91620dd20fa06d817",
+    "sha256": "adb7e7ecddf3abe523a6bddcdffa0d3c71302d3c17203fa91620dd20fa06d817",
+    "operation": "byte-identical copy"
+  },
+  {
+    "file": "figure_3/provenance/bonding_full_mode_glyphs_20260919_r10.py.txt",
+    "source_filename": "bonding_full_mode_glyphs_20260919_r10.py",
+    "source_sha256": "45c10c5448a6f535d0d05034ea6a0cef1f87e92921f40fb458772a6e01cda18d",
+    "sha256": "45c10c5448a6f535d0d05034ea6a0cef1f87e92921f40fb458772a6e01cda18d",
+    "operation": "byte-identical copy"
+  },
+  {
+    "file": "figure_3/provenance/bonding_modes_figure_20260919.py.txt",
+    "source_filename": "bonding_modes_figure_20260919.py",
+    "source_sha256": "b88f738e3e64e7268ee3b4b59862bbb79a33fe688e758234c52429350e2e4e03",
+    "sha256": "b88f738e3e64e7268ee3b4b59862bbb79a33fe688e758234c52429350e2e4e03",
+    "operation": "byte-identical copy"
+  },
+  {
+    "file": "figure_3/provenance/bonding_modes_20260919.py.txt",
+    "source_filename": "bonding_modes_20260919.py",
+    "source_sha256": "6b0512263470dd321900067b7f24bf1aed5d06dee58cf4a4ad368e780a6cdeec",
+    "sha256": "6b0512263470dd321900067b7f24bf1aed5d06dee58cf4a4ad368e780a6cdeec",
+    "operation": "byte-identical copy"
+  },
+  {
+    "file": "figure_3/provenance/bonding_mode_realspace_20260919_v2.py.txt",
+    "source_filename": "bonding_mode_realspace_20260919_v2.py",
+    "source_sha256": "dea6b070df3ea5c7c3ddcd93086c0e07de1dcda62ed9e33d89fbc21ce612813b",
+    "sha256": "dea6b070df3ea5c7c3ddcd93086c0e07de1dcda62ed9e33d89fbc21ce612813b",
+    "operation": "byte-identical copy"
+  },
+  {
+    "file": "figure_3/reference/figure_3_v15.png",
+    "source_filename": "bonding_matched_mode_figures_20260919_r3_main_600dpi.png",
+    "source_sha256": "97f5bcdfeca90053390341d8b531caad0f890b4ec048f74c7e32cba902a578ef",
+    "sha256": "97f5bcdfeca90053390341d8b531caad0f890b4ec048f74c7e32cba902a578ef",
+    "operation": "byte-identical copy"
+  },
+  {
+    "file": "figure_3/scripts/bonding_modes_figure_20260919.py",
+    "source_filename": "bonding_modes_figure_20260919.py",
+    "source_sha256": "b88f738e3e64e7268ee3b4b59862bbb79a33fe688e758234c52429350e2e4e03",
+    "sha256": "afb6a12fdd14c231213782b77dc5b08798ee0e4f891dbdb4d22ebc83dc4d9178",
+    "operation": "portable data/style paths; retain only common plotting definitions"
+  },
+  {
+    "file": "figure_3/scripts/bonding_full_mode_glyphs_20260919_r10.py",
+    "source_filename": "bonding_full_mode_glyphs_20260919_r10.py",
+    "source_sha256": "45c10c5448a6f535d0d05034ea6a0cef1f87e92921f40fb458772a6e01cda18d",
+    "sha256": "42aad763490c387a0b9e0cbce7fa6cbe4bf999455787b827acfa274aa5bc4155",
+    "operation": "portable paths; historical style-image hash stored as metadata; no changes to drawing algorithm"
+  },
+  {
+    "file": "figure_3/scripts/render.py",
+    "source_filename": "bonding_matched_mode_figures_20260919_r3.py",
+    "source_sha256": "adb7e7ecddf3abe523a6bddcdffa0d3c71302d3c17203fa91620dd20fa06d817",
+    "sha256": "bd4954efb943829ffc8e4223766d7354d4ba0fd90380251ebcd042b62d85b7b7",
+    "operation": "main figure only; no rejected supplement; portable output; raster PNG/PDF at manuscript 600 dpi; numerical/drawing functions unchanged"
+  },
+  {
+    "file": "figure_4/data/spectra.npz",
+    "source_filename": "bonding_fig3_transverse_v15_candidate_20260918_data.npz",
+    "source_sha256": "25d23fc40f553d9f27b7ea7899c207d8c2d891268d78640cadafd7743805b4bf",
+    "sha256": "703c6abb34328fc6cb8e9f6552ed19b44318ca240dc743cb726dfbc47b20924f",
+    "operation": "exact array subset for four plotted spectra; unbroadened lines preserved",
+    "arrays": [
+      "Egrid",
+      "benzene_de",
+      "benzene_w",
+      "coronene_de",
+      "coronene_w",
+      "flake864_de",
+      "flake864_w",
+      "bulk_de",
+      "bulk_w"
+    ]
+  },
+  {
+    "file": "figure_4/provenance/bonding_fig3_transverse_v15_candidate_20260918_checks.json",
+    "source_filename": "bonding_fig3_transverse_v15_candidate_20260918_checks.json",
+    "source_sha256": "6c1b4c932992c3ad18faa958dc14f33516dfc9ffa2efd6d9f26311b90cc5ac06",
+    "sha256": "6c1b4c932992c3ad18faa958dc14f33516dfc9ffa2efd6d9f26311b90cc5ac06",
+    "operation": "byte-identical copy"
+  },
+  {
+    "file": "figure_4/provenance/bonding_fig3_transverse_v15_candidate_20260918_r14_layout.json",
+    "source_filename": "bonding_fig3_transverse_v15_candidate_20260918_r14_layout.json",
+    "source_sha256": "db63474cca06b49c71ebc85bc80f7f4a0dcc14794dd4b421ed8c15a704ca532f",
+    "sha256": "db63474cca06b49c71ebc85bc80f7f4a0dcc14794dd4b421ed8c15a704ca532f",
+    "operation": "byte-identical copy"
+  },
+  {
+    "file": "figure_4/provenance/bonding_fig3_transverse_v15_candidate_20260918_r14_loops.json",
+    "source_filename": "bonding_fig3_transverse_v15_candidate_20260918_r14_loops.json",
+    "source_sha256": "a0b9a9c2f71c0ca01dac213464fd741ae664db6524aa6bcfa3fc3a62431c9e49",
+    "sha256": "a0b9a9c2f71c0ca01dac213464fd741ae664db6524aa6bcfa3fc3a62431c9e49",
+    "operation": "byte-identical copy"
+  },
+  {
+    "file": "figure_4/reference/figure_4_v15.pdf",
+    "source_filename": "loop_chemistry_transverse_v15_20260918_r14.pdf",
+    "source_sha256": "f0717503cceaf3d30c4b5e0c1e7ffd3ef72b45e8739706d47ca2ba14f53ec4cd",
+    "sha256": "f0717503cceaf3d30c4b5e0c1e7ffd3ef72b45e8739706d47ca2ba14f53ec4cd",
+    "operation": "byte-identical copy"
+  },
+  {
+    "file": "figure_4/provenance/fig3_transverse_v15_20260918.py.txt",
+    "source_filename": "fig3_transverse_v15_20260918.py",
+    "source_sha256": "92a3b0ba461a9fd086330f9e03e3357b8b8113a00e9a3334a4bd12ad50a608a6",
+    "sha256": "92a3b0ba461a9fd086330f9e03e3357b8b8113a00e9a3334a4bd12ad50a608a6",
+    "operation": "byte-identical copy"
+  },
+  {
+    "file": "figure_4/provenance/tbcore.py.txt",
+    "source_filename": "tbcore.py",
+    "source_sha256": "31acf1628c4a82f536c346a6f0dbffecf035dbbe653719b111906d25e8c64731",
+    "sha256": "31acf1628c4a82f536c346a6f0dbffecf035dbbe653719b111906d25e8c64731",
+    "operation": "byte-identical copy"
+  },
+  {
+    "file": "figure_4/provenance/bonding_v15_original_lattice_sign_examples_20260912.py.txt",
+    "source_filename": "bonding_v15_original_lattice_sign_examples_20260912.py",
+    "source_sha256": "b816fc1f50878c8ce86c899d6903b0999177bf60387c62a3f580708a342658bf",
+    "sha256": "b816fc1f50878c8ce86c899d6903b0999177bf60387c62a3f580708a342658bf",
+    "operation": "byte-identical copy"
+  },
+  {
+    "file": "figure_4/provenance/mbt_homecell_check_20260906_haldane_asset_source.py.txt",
+    "source_filename": "mbt_homecell_check_20260906_haldane_asset_source.py",
+    "source_sha256": "4068fa7588b8a9e2da75d291e5f9c207aa370dba85a298ce7de6b37a98c90114",
+    "sha256": "4068fa7588b8a9e2da75d291e5f9c207aa370dba85a298ce7de6b37a98c90114",
+    "operation": "byte-identical copy"
+  },
+  {
+    "file": "figure_4/scripts/lattice.py",
+    "source_filename": "mbt_homecell_check_20260906_haldane_asset_source.py",
+    "source_sha256": "4068fa7588b8a9e2da75d291e5f9c207aa370dba85a298ce7de6b37a98c90114",
+    "sha256": "b7ac6de81eb8be7ed17f35b366821c05e3f77618a9b6b750408c66db341f1874",
+    "operation": "portable style path; remove old output CLI; keep small-system diagonalization and figure geometry"
+  },
+  {
+    "file": "figure_4/scripts/loops.py",
+    "source_filename": "bonding_v15_original_lattice_sign_examples_20260912.py",
+    "source_sha256": "b816fc1f50878c8ce86c899d6903b0999177bf60387c62a3f580708a342658bf",
+    "sha256": "c43094813a701ef5d55a9710790168d47306f66f26e9d537d8504fa17367c1e1",
+    "operation": "import portable lattice directly; definitions only; preserve loop choices and sign assertions"
+  },
+  {
+    "file": "figure_4/scripts/render.py",
+    "source_filename": "fig3_transverse_v15_20260918.py",
+    "source_sha256": "92a3b0ba461a9fd086330f9e03e3357b8b8113a00e9a3334a4bd12ad50a608a6",
+    "sha256": "e2742803e07cb72fffb63a9071be9b44a7d3069a627d804551ca481a07c3548c",
+    "operation": "retain r14 drawing, broadening, and render functions; remove heavy computations and absolute paths; add portable tables and checks"
+  },
+  {
+    "file": "figure_3/provenance/bonding_mode_realspace_20260919_v2_Diamond.json",
+    "source_filename": "bonding_mode_realspace_20260919_v2_Diamond.json",
+    "source_sha256": "ae7f5b4d93eea576e624c278373accb06d6b3f917df1905b56882ed2a005739c",
+    "sha256": "ae7f5b4d93eea576e624c278373accb06d6b3f917df1905b56882ed2a005739c",
+    "operation": "byte-identical copy"
+  },
+  {
+    "file": "figure_3/provenance/bonding_mode_realspace_20260919_v2_CsI3.json",
+    "source_filename": "bonding_mode_realspace_20260919_v2_CsI3.json",
+    "source_sha256": "10861a3e2e5d22dbb2799414349bd727ae9576aae1a1beb116996b9b5849d3d5",
+    "sha256": "10861a3e2e5d22dbb2799414349bd727ae9576aae1a1beb116996b9b5849d3d5",
+    "operation": "byte-identical copy"
+  },
+  {
+    "file": "figure_3/provenance/bonding_mode_realspace_20260919_v2_GeTe.json",
+    "source_filename": "bonding_mode_realspace_20260919_v2_GeTe.json",
+    "source_sha256": "4fcab4f39ef8a903fb7acde5950d79246be4b9a2fbbb5828a25cb4f19afa79c6",
+    "sha256": "4fcab4f39ef8a903fb7acde5950d79246be4b9a2fbbb5828a25cb4f19afa79c6",
+    "operation": "byte-identical copy"
+  },
+  {
+    "file": "figure_3/provenance/bonding_mode_realspace_20260919_v2_NaCl.json",
+    "source_filename": "bonding_mode_realspace_20260919_v2_NaCl.json",
+    "source_sha256": "ecb919d463047326cbf45136473ae37254a7ba74c158b862d11489b7c5f4e84c",
+    "sha256": "ecb919d463047326cbf45136473ae37254a7ba74c158b862d11489b7c5f4e84c",
+    "operation": "byte-identical copy"
+  }
+]

@@ -1,0 +1,128 @@
+{
+  "status": "complete",
+  "material": "Diamond",
+  "host": "rqlab-studio.phys.columbia.edu",
+  "mesh": 24,
+  "grid": "unshifted j/M in each primitive reciprocal direction",
+  "scope": "Atom-pair channel preview: orbital processes summed coherently before SVD; physical images retained; exact nuclear-site diagonal position. Periodic q=0 patterns, not localized modes or the full orbital-pair SVD.",
+  "selection": "Largest directed selfweights through target trace, complete cutoff ties at relative 1e-10, then close under physical pair reversal.",
+  "target_trace_fraction": 0.99,
+  "selection_boundary_selfweight": 2.4189889292070154e-05,
+  "n_selected": 304,
+  "n_full": 10360,
+  "nocc": 4,
+  "column_count": 663552,
+  "input_provenance": {
+    "folder": "/Users/raquelqueiroz/Library/CloudStorage/GoogleDrive-raquelqueirozlab@gmail.com/My Drive/CodeBase/ORLT/ORLT_data/Diamond",
+    "sha256": {
+      "wannier90_hr.dat": "d78f12625aedf2b326e374b81ed990d547aa2c46dc1e0bf6b6cf62f39214ab09",
+      "wannier90_centres.xyz": "b645d4763fba8fa22104392562d8e6e4dcbd8c53df8f261621861849f52f4690",
+      "wannier90.win": "e2b4d3a9b1db4a4ce692858232a40d8b8cb75aaf03c8c2177d6eb0ba30d3a039",
+      "wannier90.wout": "ba17dd6e04e2eb5f8437997e8b2c0ff8d4aef43f30eef57759f2f02a81793706",
+      "POSCAR": "669773f11d94cba711bd85e4cf312f1fe6ce4c26979c6ffcd232c838917acd8f",
+      "OUTCAR": "45c9e267c09e39515acccf1b0562cfd893836e64b7674302a02339648d62debf"
+    },
+    "missing_optional_metadata": [],
+    "win_lattice_A": [
+      [
+        0.0,
+        1.7803726,
+        1.7803726
+      ],
+      [
+        1.7803726,
+        0.0,
+        1.7803726
+      ],
+      [
+        1.7803726,
+        1.7803726,
+        0.0
+      ]
+    ],
+    "used_lattice_A": [
+      [
+        0.0,
+        1.7803725545451614,
+        1.7803725545451614
+      ],
+      [
+        1.7803725545451614,
+        0.0,
+        1.7803725545451614
+      ],
+      [
+        1.7803725545451614,
+        1.7803725545451614,
+        0.0
+      ]
+    ],
+    "lattice_replacement_max_abs_A": 4.54548385597775e-08,
+    "position_operator": "diagonal Wannier centres, raw HR-consistent images",
+    "cartesian_derivative": "analytic dH/dk_cart, Angstrom*eV",
+    "min_hopping_norm_eV": 0.0001,
+    "one_spin_nocc_primitive": 4,
+    "normalization": "Nk*nocc_active, spin factor cancels; excludes bands outside retained manifold",
+    "mu_OUTCAR_eV": 10.186,
+    "pythtb_version": "2.0.2",
+    "same_atom_definition": "Same finite-cell atomic label; includes all periodic hopping images contributing to that matrix block.",
+    "family_distance_definition": "Minimum-image nuclear distance classifies finite-cell atomic index pairs; each B_AB coherently sums all hopping images. This is not a hopping-distance cutoff. CsI3 terminal pairs must share an adjacent central iodine."
+  },
+  "source_and_input_sha256": {
+    "/Users/raquelqueiroz/Library/CloudStorage/GoogleDrive-rpa.queiroz@gmail.com/My Drive/Code/Bonding/bonding_modes_20260919.py": "6b0512263470dd321900067b7f24bf1aed5d06dee58cf4a4ad368e780a6cdeec",
+    "/Users/raquelqueiroz/Library/CloudStorage/GoogleDrive-rpa.queiroz@gmail.com/My Drive/Queiroz Lab/CodeBase/Bonding/mode_decomposition/atomic_velocity_links_20260918.py": "19c8f9a83ae35a07da2e2b6f8ccc5ce0168b0825c49514c82355ed5ad476faf3",
+    "/Users/raquelqueiroz/Library/CloudStorage/GoogleDrive-rpa.queiroz@gmail.com/My Drive/Queiroz Lab/CodeBase/Bonding/mode_decomposition/image_resolved_motif_20260918_v2.py": "bf89c9733d950f6162a50a6f91f6cb7af0f0cbc894c863275d7a5af3b438aafb",
+    "/Users/raquelqueiroz/Library/CloudStorage/GoogleDrive-rpa.queiroz@gmail.com/My Drive/Queiroz Lab/CodeBase/Bonding/mode_decomposition/motif_response_candidate_20260918_rebuild.py": "f3b3e3b1526711eb5327b10e1c38624696ea2626366b636e1423ce1f77784b2b",
+    "/Users/raquelqueiroz/orlt_atlas_work/atomic_velocity_links_20260918_v1_Diamond_mesh24.npz": "e3c3368efb8d9da2776f4015fd8da7f8106c622feb3c3059a6202e0d7c097307",
+    "/Users/raquelqueiroz/orlt_atlas_work/atomic_velocity_links_20260918_v1_Diamond_mesh24.json": "3d091fd14921c0da6ce74f0e60c607e61eaaa579dbf3208b602686f531c33267"
+  },
+  "mode_definitions": {
+    "eigenvalues": "lambda_s = singular_value_s(B_selected)^2; descending, roundoff-negative values clipped only after a PSD test",
+    "metric_weights": "lambda_s * abs(sum_p u_ps)^2; sum is coherently restricted metric, not full metric",
+    "range": "r90 from sum_{|d_p|<=r} abs(u_ps)^2; internal physical bond separation, not localization length",
+    "endpoint_marginals": "sum abs(u_ps)^2 over occupied-side atomic label A or empty-side atomic label B; no image localization or established ionicity claim",
+    "reversal_asymmetry": "sum over unordered reversed pairs of abs(abs(u_p)^2 - abs(u_reverse)^2); in [0,1]",
+    "degeneracy": "individual modes inside a degenerate block are arbitrary; use block-projector weights and total block response for display"
+  },
+  "full_metric": 0.7566776226362071,
+  "selected_metric": 0.7557576037044356,
+  "full_trace": 0.536949139524406,
+  "selected_trace": 0.5316618594129909,
+  "selected_trace_fraction": 0.9901531081396309,
+  "selected_metric_fraction": 0.9987841335540408,
+  "selected_full_metric_cross_contraction": 0.7552971111880751,
+  "omitted_response_norm_squared": 0.0018410039644924936,
+  "timings": {
+    "generation_s": 50.724273440777324,
+    "gram_accumulation_s": 1.508212604210712,
+    "accumulation_s": 52.24155937496107,
+    "eigendecomposition_s": 0.02266083296854049
+  },
+  "checks": {
+    "hermiticity_max": 4.979298866229724e-18,
+    "diagonal_independent_max": 3.608224830031759e-16,
+    "selected_metric_independent_error": 4.4419803154527e-16,
+    "saved_diagonal_max": 3.608224830031759e-16,
+    "saved_full_cross_rows_max": 4.1652089407301773e-17,
+    "saved_full_metric_xyz_max": 0.0,
+    "saved_full_trace_error": 5.551115123125783e-16,
+    "minimum_raw_eigenvalue": 1.1931848560977982e-05,
+    "eigenvalue_trace_error": 1.1102230246251565e-16,
+    "eigenmode_metric_error": 3.219646771412954e-15,
+    "eigenvalue_frobenius_error": 2.7755575615628914e-16,
+    "random_probe_reconstruction_relative": 3.3930785943219608e-15,
+    "sampled_eigenpair_residual_relative": 1.788571354223509e-15,
+    "sampled_orthogonality_max": 2.220446049250313e-15
+  },
+  "n_k": 13824,
+  "min_gap_eV": 5.59687799999999,
+  "arrays": {
+    "path": "/Users/raquelqueiroz/orlt_atlas_work/bonding_modes_20260919_v1_Diamond_mesh24.npz",
+    "sha256": "01dc8f4e309b0d7b8c187d2b2afa8fc5393ad38152d77cef743540a9c4099146"
+  },
+  "top_trace_mode_metric_fraction_of_full": 0.9502287016597187,
+  "brightest_metric_mode_index": 0,
+  "full_metric_capture_in_first_10_trace_modes": 0.9502289501887149,
+  "full_trace_capture_in_first_10_trace_modes": 0.8181634616421798,
+  "elapsed_s": 54.026047999970615
+}

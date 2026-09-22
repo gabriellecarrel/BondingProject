@@ -1,0 +1,56 @@
+{
+  "baseline": "r13",
+  "upper_panels_pixel_identical": true,
+  "all_six_loop_records_identical": true,
+  "underlying_data_hashes_unchanged": true,
+  "finite_N": 864,
+  "gaussian_standard_deviation": 0.075,
+  "gaussian_units": "t",
+  "lower_annotation_fontsize_points": 8,
+  "lower_labels": [
+    "C=0",
+    "C=0",
+    "N=864, C=0",
+    "Bulk, C=+1"
+  ],
+  "C_definition": "(2pi/Ac) integral dE [-2 Im Qxy(E)]; finite open-system labels denote full marker sums, not a periodic topological invariant",
+  "spectra": {
+    "benzene": {
+      "normalized_integral_exact": 2.2204460492503104e-16,
+      "normalized_integral_displayed": 3.356203027038832e-16,
+      "minimum": -1.7731779760771194,
+      "maximum": 0.8865849841601129,
+      "max_curve_outside_x_range": 0.0
+    },
+    "coronene": {
+      "normalized_integral_exact": -1.6653345369377348e-16,
+      "normalized_integral_displayed": -1.0907659837876204e-16,
+      "minimum": -1.0572940973219354,
+      "maximum": 0.5897441664270194,
+      "max_curve_outside_x_range": 0.0
+    },
+    "flake864": {
+      "normalized_integral_exact": 1.5265566588595902e-16,
+      "normalized_integral_displayed": 0.0,
+      "minimum": -1.7146008775551365,
+      "maximum": 0.19750796542607277,
+      "max_curve_outside_x_range": 0.0
+    },
+    "bulk": {
+      "normalized_integral_exact": 0.9999999999999998,
+      "normalized_integral_displayed": 0.9999999999999999,
+      "minimum": 0.0,
+      "maximum": 0.25029136597267737,
+      "max_curve_outside_x_range": 0.0
+    }
+  },
+  "panel_f_ylim": [
+    -1.920352982861753,
+    0.3253438118477593
+  ],
+  "full_negative_peak_visible": true,
+  "files": {
+    "bonding_fig3_transverse_v15_candidate_20260918_r14.pdf": "f0717503cceaf3d30c4b5e0c1e7ffd3ef72b45e8739706d47ca2ba14f53ec4cd",
+    "bonding_fig3_transverse_v15_candidate_20260918_r14.png": "58f8546798f7e4e53027c6d7a5a737287aa20f0bccfc3ada676bf388ea344459"
+  }
+}

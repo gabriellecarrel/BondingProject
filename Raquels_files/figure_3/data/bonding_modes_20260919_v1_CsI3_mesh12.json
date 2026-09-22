@@ -1,0 +1,129 @@
+{
+  "status": "complete",
+  "material": "CsI3",
+  "host": "rqlab-studio.phys.columbia.edu",
+  "mesh": 12,
+  "grid": "unshifted j/M in each primitive reciprocal direction",
+  "scope": "Atom-pair channel preview: orbital processes summed coherently before SVD; physical images retained; exact nuclear-site diagonal position. Periodic q=0 patterns, not localized modes or the full orbital-pair SVD.",
+  "selection": "Largest directed selfweights through target trace, complete cutoff ties at relative 1e-10, then close under physical pair reversal.",
+  "target_trace_fraction": 0.99,
+  "selection_boundary_selfweight": 5.963515242004908e-05,
+  "n_selected": 144,
+  "n_full": 2804,
+  "nocc": 32,
+  "column_count": 663552,
+  "input_provenance": {
+    "folder": "/Users/raquelqueiroz/Library/CloudStorage/GoogleDrive-raquelqueirozlab@gmail.com/My Drive/CodeBase/ORLT/ORLT_data/CsI3",
+    "sha256": {
+      "wannier90_hr.dat": "e172c7cfc7a8fd5ceca1306d75187defb97fe36d43c43c16c1f1c94d95a112b8",
+      "wannier90_centres.xyz": "8d818c7cf1b28003488f52ede00f9e0fd449cf4d430c0c0f7fd7bce223ad3a4a",
+      "wannier90.win": "567cbd1574c537f5f2a51d4dbab04e413c517a863df95f0df0a19012bd9c1923",
+      "POSCAR": "c304e5d0ccd9ca1069399980e824c481cf27693187c1cc292b57e9cc312f8ef5",
+      "OUTCAR": "e88be4419dbf09cbb51e37780f051529e71331f6485593a80f1c8a84a2ddfe5a"
+    },
+    "missing_optional_metadata": [
+      "wannier90.wout"
+    ],
+    "win_lattice_A": [
+      [
+        11.2690449,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        7.2467427,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        10.500504
+      ]
+    ],
+    "used_lattice_A": [
+      [
+        11.269044902126348,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        7.246742722905511,
+        0.0
+      ],
+      [
+        0.0,
+        -0.0,
+        10.500504023425293
+      ]
+    ],
+    "lattice_replacement_max_abs_A": 2.3425293704804062e-08,
+    "position_operator": "diagonal Wannier centres, raw HR-consistent images",
+    "cartesian_derivative": "analytic dH/dk_cart, Angstrom*eV",
+    "min_hopping_norm_eV": 0.0001,
+    "one_spin_nocc_primitive": 32,
+    "normalization": "Nk*nocc_active, spin factor cancels; excludes bands outside retained manifold",
+    "mu_OUTCAR_eV": 0.6837,
+    "pythtb_version": "2.0.2",
+    "same_atom_definition": "Same finite-cell atomic label; includes all periodic hopping images contributing to that matrix block.",
+    "family_distance_definition": "Minimum-image nuclear distance classifies finite-cell atomic index pairs; each B_AB coherently sums all hopping images. This is not a hopping-distance cutoff. CsI3 terminal pairs must share an adjacent central iodine."
+  },
+  "source_and_input_sha256": {
+    "/Users/raquelqueiroz/Library/CloudStorage/GoogleDrive-rpa.queiroz@gmail.com/My Drive/Code/Bonding/bonding_modes_20260919.py": "6b0512263470dd321900067b7f24bf1aed5d06dee58cf4a4ad368e780a6cdeec",
+    "/Users/raquelqueiroz/Library/CloudStorage/GoogleDrive-rpa.queiroz@gmail.com/My Drive/Queiroz Lab/CodeBase/Bonding/mode_decomposition/atomic_velocity_links_20260918.py": "19c8f9a83ae35a07da2e2b6f8ccc5ce0168b0825c49514c82355ed5ad476faf3",
+    "/Users/raquelqueiroz/Library/CloudStorage/GoogleDrive-rpa.queiroz@gmail.com/My Drive/Queiroz Lab/CodeBase/Bonding/mode_decomposition/image_resolved_motif_20260918_v2.py": "bf89c9733d950f6162a50a6f91f6cb7af0f0cbc894c863275d7a5af3b438aafb",
+    "/Users/raquelqueiroz/Library/CloudStorage/GoogleDrive-rpa.queiroz@gmail.com/My Drive/Queiroz Lab/CodeBase/Bonding/mode_decomposition/motif_response_candidate_20260918_rebuild.py": "f3b3e3b1526711eb5327b10e1c38624696ea2626366b636e1423ce1f77784b2b",
+    "/Users/raquelqueiroz/orlt_atlas_work/atomic_velocity_links_20260918_v1_CsI3_mesh12.npz": "571e2034ef5683cb99c88103444ae863043d591c03867094e666267dbbd05c92",
+    "/Users/raquelqueiroz/orlt_atlas_work/atomic_velocity_links_20260918_v1_CsI3_mesh12.json": "429bac753fe566144299a05fd1c9a6095bf2a008c5e8464cd0ca4deb1dd518e1"
+  },
+  "mode_definitions": {
+    "eigenvalues": "lambda_s = singular_value_s(B_selected)^2; descending, roundoff-negative values clipped only after a PSD test",
+    "metric_weights": "lambda_s * abs(sum_p u_ps)^2; sum is coherently restricted metric, not full metric",
+    "range": "r90 from sum_{|d_p|<=r} abs(u_ps)^2; internal physical bond separation, not localization length",
+    "endpoint_marginals": "sum abs(u_ps)^2 over occupied-side atomic label A or empty-side atomic label B; no image localization or established ionicity claim",
+    "reversal_asymmetry": "sum over unordered reversed pairs of abs(abs(u_p)^2 - abs(u_reverse)^2); in [0,1]",
+    "degeneracy": "individual modes inside a degenerate block are arbitrary; use block-projector weights and total block response for display"
+  },
+  "full_metric": 0.651693051774145,
+  "selected_metric": 0.6254888311885477,
+  "full_trace": 0.34432029141642023,
+  "selected_trace": 0.3416781971275489,
+  "selected_trace_fraction": 0.9923266378580169,
+  "selected_metric_fraction": 0.9597905478441731,
+  "selected_full_metric_cross_contraction": 0.6369446329654982,
+  "omitted_response_norm_squared": 0.0032926170316963654,
+  "timings": {
+    "generation_s": 6.147759624989703,
+    "gram_accumulation_s": 0.4253057085443288,
+    "accumulation_s": 6.574441791977733,
+    "eigendecomposition_s": 0.0033991660457104445
+  },
+  "checks": {
+    "hermiticity_max": 1.0133023776412555e-19,
+    "diagonal_independent_max": 6.245004513516506e-17,
+    "selected_metric_independent_error": 7.771561280932012e-16,
+    "saved_diagonal_max": 6.245004513516506e-17,
+    "saved_full_cross_rows_max": 1.3877798224300836e-17,
+    "saved_full_metric_xyz_max": 0.0,
+    "saved_full_trace_error": 1.27675647831893e-15,
+    "minimum_raw_eigenvalue": 2.902307702813869e-07,
+    "eigenvalue_trace_error": 1.6653345369377348e-16,
+    "eigenmode_metric_error": 1.5543122344752192e-15,
+    "eigenvalue_frobenius_error": 5.551115123125783e-17,
+    "random_probe_reconstruction_relative": 2.1781949784097277e-15,
+    "sampled_eigenpair_residual_relative": 1.0248091309460838e-15,
+    "sampled_orthogonality_max": 1.828091315141836e-15
+  },
+  "n_k": 1728,
+  "min_gap_eV": 1.9749396386099274,
+  "arrays": {
+    "path": "/Users/raquelqueiroz/orlt_atlas_work/bonding_modes_20260919_v1_CsI3_mesh12.npz",
+    "sha256": "129a80b234c47ce17dd1921bafd5151139fae3c5b11556190bbbc2d90140487e"
+  },
+  "top_trace_mode_metric_fraction_of_full": 5.41965963349566e-24,
+  "brightest_metric_mode_index": 1,
+  "full_metric_capture_in_first_10_trace_modes": 0.9037259974337232,
+  "full_trace_capture_in_first_10_trace_modes": 0.916941884726596,
+  "elapsed_s": 6.984490749891847
+}

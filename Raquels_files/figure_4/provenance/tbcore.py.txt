@@ -1,0 +1,627 @@
+#!/usr/bin/env python3
+"""tbcore.py -- tight-binding library for the bonding/QGT loop-response package.
+
+Conventions (inherited from CodeBase/Bonding, delta_q_energy_resolved.py et al.):
+  * units: e = hbar = t1 = a = 1 (a = NN bond length). Energies in t1,
+    lengths in a, conductivity in e^2/hbar per unit area, moments in
+    e a^2 t1 / hbar. Spinless internally; spin degeneracy g_s is a final
+    multiplicative factor applied (if at all) OUTSIDE every trace.
+  * Hamiltonian signs: NN hop = -t1; Haldane NNN hop = -t2 * exp(i*phi*nu),
+    nu = sign(z . (d1 x d2)) with d1 the leg into the shared NN neighbor and
+    d2 the leg out of it (standard Haldane orientation).
+  * Peierls (physical flux) protocol is SEPARATE from Haldane NNN hopping:
+    symmetric gauge A = (B/2)(-y, x), straight-line integral
+    theta_ij = (B/2)(x_i y_j - x_j y_i), with B = 2*pi*(Phi_hex/Phi0)/A_hex,
+    A_hex = 3*sqrt(3)/2 a^2 the hexagon (ring) area. Applied to ALL hops
+    present (NN, and NNN when a mass is needed).
+  * density matrix rho = P (occupied projector), T = 0, gapped fillings only.
+  * two-center bond index   b_ab  = rho_ab * rho_ba = |rho_ab|^2
+  * oriented three-center   b_abc = rho_ab * rho_bc * rho_ca  (complex)
+  * QGT (bounded system, diagonal-position basis):
+        Q^{mu nu} = Tr[P r^mu Q r^nu]  (extensive; NOT per-electron)
+    bond-loop form: Q^{mu nu} = - sum_{abc} R^mu_{bc} R^nu_{ca} b_{abc}
+    metric G = Re Q_sym; integrated curvature Omega^{mu nu} = -2 Im Q^{mu nu}.
+  * energy-resolved Q^{mu nu}(E): occupied->empty transition sum;
+    Re sigma^{mu nu}(E) = (pi e^2/hbar V) * E * Q^{mu nu}(E), V = flake area.
+  * response moments (exact transition sums, no broadening):
+        S^eta[mu nu] = sum_{n occ, m emp} (E_m - E_n)^eta r^mu_nm r^nu_mn
+    S^{-1} ~ polarizability proxy, S^0 = equal-time QGT (localization),
+    S^1 = f-sum / inverse-effective-mass proxy;
+    interband orbital moment m_inter = Im T^xy, T^{mu nu}=Tr[P [r^mu,H] Q r^nu]
+    (INTERBAND piece only; NOT the full modern orbital magnetization).
+"""
+import numpy as np
+
+# ---------------------------------------------------------------- geometry
+
+def honeycomb_flake(n_shells):
+    """Honeycomb flake as union of hexagons whose centers lie within
+    n_shells of the origin on the triangular lattice of hexagon centers.
+    n_shells=1 -> benzene-topology 6-ring is NOT this (use ring());
+    n_shells=1 -> 7? No: shells counts rings of hexagon centers:
+      n_shells=1 : central hexagon + 6 neighbors = coronene, 24 sites
+      n_shells=2 : circumcoronene topology, 54 sites
+      n_shells=3 : 96 sites
+    Returns (coords[N,2], sublattice[N] in {0,1}).
+    Hexagon-center lattice vectors: A1=(3/2,sqrt(3)/2)*sqrt(3)? -- centers of
+    hexagons form a triangular lattice with spacing sqrt(3)*a.
+    """
+    a1 = np.array([np.sqrt(3.0), 0.0])
+    a2 = np.array([np.sqrt(3.0) / 2.0, 1.5])
+    centers = []
+    rng = range(-2 * n_shells, 2 * n_shells + 1)
+    for i in rng:
+        for j in rng:
+            c = i * a1 + j * a2
+            # hexagonal shell index on triangular lattice
+            if _tri_shell(i, j) <= n_shells:
+                centers.append(c)
+    # hexagon vertices: center + unit vectors at 30 + 60k degrees
+    verts = []
+    for c in centers:
+        for k in range(6):
+            th = np.pi / 6.0 + k * np.pi / 3.0
+            verts.append(c + np.array([np.cos(th), np.sin(th)]))
+    verts = np.array(verts)
+    # dedupe
+    uniq = []
+    for v in verts:
+        if not any(np.linalg.norm(v - u) < 1e-6 for u in uniq):
+            uniq.append(v)
+    coords = np.array(uniq)
+    # sort: radial then angular (stable, documented indexing)
+    r = np.linalg.norm(coords, axis=1)
+    th = np.mod(np.arctan2(coords[:, 1], coords[:, 0]), 2 * np.pi)
+    order = np.lexsort((th, np.round(r, 6)))
+    coords = coords[order]
+    sub = _sublattice(coords)
+    return coords, sub
+
+
+def _tri_shell(i, j):
+    """Hexagonal shell index of triangular-lattice point i*a1+j*a2."""
+    if i * j >= 0:
+        return abs(i + j)
+    return max(abs(i), abs(j))
+
+
+def _sublattice(coords):
+    """Two-color the honeycomb via NN graph BFS."""
+    N = len(coords)
+    nn = neighbor_pairs(coords, 1.0)
+    adj = [[] for _ in range(N)]
+    for i, j in nn:
+        adj[i].append(j)
+        adj[j].append(i)
+    sub = -np.ones(N, dtype=int)
+    for seed in range(N):
+        if sub[seed] >= 0:
+            continue
+        sub[seed] = 0
+        stack = [seed]
+        while stack:
+            i = stack.pop()
+            for j in adj[i]:
+                if sub[j] < 0:
+                    sub[j] = 1 - sub[i]
+                    stack.append(j)
+    return sub
+
+
+def ring(N=6, radius=None):
+    """N-site ring (benzene N=6). Bond length = 1 by default."""
+    if radius is None:
+        radius = 0.5 / np.sin(np.pi / N)  # NN distance = 1
+    th = 2 * np.pi * np.arange(N) / N
+    coords = radius * np.stack([np.cos(th), np.sin(th)], axis=1)
+    sub = np.arange(N) % 2
+    return coords, sub
+
+
+def neighbor_pairs(coords, dist, tol=1e-3):
+    N = len(coords)
+    out = []
+    for i in range(N):
+        for j in range(i + 1, N):
+            if abs(np.linalg.norm(coords[i] - coords[j]) - dist) < tol:
+                out.append((i, j))
+    return out
+
+# ---------------------------------------------------------------- hamiltonians
+
+def haldane_flake_H(coords, t1=1.0, t2=0.0, phi=0.0, mass=0.0, sub=None):
+    """OBC Hamiltonian: NN = -t1; NNN = -t2 exp(i phi nu); Semenoff mass
+    +mass on sublattice 0, -mass on sublattice 1. Haldane orientation nu via
+    the shared NN neighbor."""
+    N = len(coords)
+    H = np.zeros((N, N), dtype=complex)
+    nn = neighbor_pairs(coords, 1.0)
+    for i, j in nn:
+        H[i, j] = -t1
+        H[j, i] = -t1
+    if t2 != 0.0:
+        nnn = neighbor_pairs(coords, np.sqrt(3.0))
+        adj = [set() for _ in range(N)]
+        for i, j in nn:
+            adj[i].add(j)
+            adj[j].add(i)
+        for i, j in nnn:
+            common = adj[i] & adj[j]
+            if not common:
+                continue
+            k = sorted(common)[0]  # unique in interior; deterministic on edge
+            d1 = coords[k] - coords[i]
+            d2 = coords[j] - coords[k]
+            nu = np.sign(d1[0] * d2[1] - d1[1] * d2[0])
+            H[i, j] = -t2 * np.exp(1j * phi * nu)
+            H[j, i] = np.conj(H[i, j])
+    if mass != 0.0:
+        if sub is None:
+            raise ValueError("mass needs sublattice array")
+        H += np.diag(mass * (1 - 2 * sub).astype(float))
+    return H
+
+
+def ring_H(N=6, t1=1.0, t2=0.0, phi=0.0):
+    """Ring with NN=-t1 and 'molecular Haldane' NNN=-t2 e^{i phi nu},
+    nu=+1 for the counterclockwise i->i+2 hop."""
+    H = np.zeros((N, N), dtype=complex)
+    for i in range(N):
+        H[i, (i + 1) % N] = -t1
+        H[(i + 1) % N, i] = -t1
+    if t2 != 0.0:
+        for i in range(N):
+            j = (i + 2) % N
+            H[i, j] = -t2 * np.exp(1j * phi)
+            H[j, i] = np.conj(H[i, j])
+    return H
+
+
+def peierls(H, coords, flux_per_hex):
+    """Multiply every hop by the symmetric-gauge Peierls phase for uniform B
+    with flux_per_hex (units of Phi0) through each hexagon of area
+    A_hex = 3 sqrt(3)/2 a^2. theta_ij = (B/2)(x_i y_j - x_j y_i),
+    B = 2 pi flux_per_hex / A_hex. hop i<-j convention H[i,j] -> phase for
+    path j->i: exp(i theta_{ji}) with theta antisymmetric; sign fixed so a
+    counterclockwise loop encloses +2 pi flux_per_hex."""
+    A_hex = 3.0 * np.sqrt(3.0) / 2.0
+    B = 2.0 * np.pi * flux_per_hex / A_hex
+    N = len(coords)
+    Hp = np.array(H, dtype=complex)
+    for i in range(N):
+        for j in range(N):
+            if i != j and Hp[i, j] != 0.0:
+                theta = 0.5 * B * (coords[j][0] * coords[i][1]
+                                   - coords[i][0] * coords[j][1])
+                Hp[i, j] *= np.exp(1j * theta)
+    return Hp
+
+# ---------------------------------------------------------------- projectors
+
+def ground_state(H, n_occ):
+    """Return (P, evals, evecs, gap). Raises if degenerate at the filling."""
+    ev, U = np.linalg.eigh(H)
+    gap = ev[n_occ] - ev[n_occ - 1]
+    P = U[:, :n_occ] @ U[:, :n_occ].conj().T
+    return P, ev, U, gap
+
+# ---------------------------------------------------------------- bond indices
+
+def bond_two_center(P):
+    return np.abs(P) ** 2
+
+
+def bond_three_center(P, a, b, c):
+    return P[a, b] * P[b, c] * P[c, a]
+
+
+def top_oriented_loops(P, n_top=10, min_sep=0):
+    """Largest |Im b_abc| over ordered triples a<b<c (each unordered triple
+    contributes one orientation; the reverse orientation is the conjugate).
+    Returns list of (Im b, (a,b,c))."""
+    N = P.shape[0]
+    out = []
+    for a in range(N):
+        for b in range(a + 1, N):
+            if P[a, b] == 0 and min_sep:
+                continue
+            for c in range(b + 1, N):
+                v = (P[a, b] * P[b, c] * P[c, a]).imag
+                out.append((v, (a, b, c)))
+    out.sort(key=lambda t: -abs(t[0]))
+    return out[:n_top]
+
+# ---------------------------------------------------------------- QGT
+
+def qgt_operator(P, coords):
+    """Q^{mu nu} = Tr[P r^mu Q r^nu], extensive trace. Returns 2x2 complex."""
+    N = P.shape[0]
+    Q = np.eye(N) - P
+    X = np.diag(coords[:, 0].astype(complex))
+    Y = np.diag(coords[:, 1].astype(complex))
+    R = [X, Y]
+    out = np.zeros((2, 2), dtype=complex)
+    for m in range(2):
+        for n in range(2):
+            out[m, n] = np.trace(P @ R[m] @ Q @ R[n])
+    return out
+
+
+def qgt_bond_sum(P, coords):
+    """Q^{mu nu} = -sum_{abc} R^mu_{bc} R^nu_{ca} b_{abc} with
+    b_{abc} = P_ab P_bc P_ca, direct einsum (fine up to N ~ 150)."""
+    r = [coords[:, 0], coords[:, 1]]
+    out = np.zeros((2, 2), dtype=complex)
+    for m in range(2):
+        for n in range(2):
+            Rm = r[m][:, None] - r[m][None, :]   # R^mu_{bc} indexed [b,c]
+            Rn = r[n][:, None] - r[n][None, :]   # R^nu_{ca} indexed [c,a]
+            out[m, n] = -np.einsum('ab,bc,ca,bc,ca->', P, P, P, Rm, Rn,
+                                   optimize=True)
+    return out
+
+
+def metric_two_center(P, coords):
+    """G^{mu nu} = 1/2 sum_ab b_ab R^mu_ab R^nu_ab (extensive; the paper's
+    per-electron 1/N_e is NOT applied here)."""
+    b = bond_two_center(P)
+    dx = coords[:, 0][:, None] - coords[:, 0][None, :]
+    dy = coords[:, 1][:, None] - coords[:, 1][None, :]
+    d = [dx, dy]
+    out = np.zeros((2, 2))
+    for m in range(2):
+        for n in range(2):
+            out[m, n] = 0.5 * np.sum(b * d[m] * d[n])
+    return out
+
+# ------------------------------------------------------- energy-resolved / response
+
+def transition_data(ev, U, coords, n_occ):
+    """Return (dE[occ,emp], Rx[occ,emp], Ry[occ,emp]) dipole matrix elements
+    between occupied and empty eigenstates."""
+    X = coords[:, 0]
+    Y = coords[:, 1]
+    Uo = U[:, :n_occ]
+    Ue = U[:, n_occ:]
+    Rx = Uo.conj().T @ (X[:, None] * Ue)
+    Ry = Uo.conj().T @ (Y[:, None] * Ue)
+    dE = ev[n_occ:][None, :] - ev[:n_occ][:, None]
+    return dE, Rx, Ry
+
+
+def moments(ev, U, coords, n_occ, etas=(-1, 0, 1)):
+    """S^eta[mu nu] = sum dE^eta r^mu_nm r^nu_mn (extensive)."""
+    dE, Rx, Ry = transition_data(ev, U, coords, n_occ)
+    R = {"x": Rx, "y": Ry}
+    out = {}
+    for eta in etas:
+        W = dE ** float(eta)
+        out[eta] = {mu + nu: np.sum(W * R[mu] * R[nu].conj())
+                    for mu in "xy" for nu in "xy"}
+    return out
+
+
+def qE_spectrum(ev, U, coords, n_occ, Egrid, eta_broad, kind="lorentz"):
+    """Broadened Q^{mu nu}(E) on Egrid. Returns dict 'xx','xy',... complex."""
+    dE, Rx, Ry = transition_data(ev, U, coords, n_occ)
+    R = {"x": Rx, "y": Ry}
+    if kind == "lorentz":
+        def d(E):
+            return (eta_broad / np.pi) / ((E - dE) ** 2 + eta_broad ** 2)
+    else:
+        def d(E):
+            return np.exp(-((E - dE) / eta_broad) ** 2 / 2) / \
+                (eta_broad * np.sqrt(2 * np.pi))
+    out = {mu + nu: np.zeros(len(Egrid), dtype=complex)
+           for mu in "xy" for nu in "xy"}
+    for iE, E in enumerate(Egrid):
+        W = d(E)
+        for mu in "xy":
+            for nu in "xy":
+                out[mu + nu][iE] = np.sum(W * R[mu] * R[nu].conj())
+    return out
+
+
+def interband_orbital_moment(P, H, coords):
+    """T^{mu nu} = Tr[P [r^mu, H] Q r^nu]; m_inter = Im T^{xy} in
+    e a^2 t1/hbar (e=hbar=1). INTERBAND piece only."""
+    N = P.shape[0]
+    Q = np.eye(N) - P
+    X = np.diag(coords[:, 0].astype(complex))
+    Y = np.diag(coords[:, 1].astype(complex))
+    Cx = X @ H - H @ X
+    Cy = Y @ H - H @ Y
+    Txy = np.trace(P @ Cx @ Q @ Y)
+    Txx = np.trace(P @ Cx @ Q @ X)
+    Tyy = np.trace(P @ Cy @ Q @ Y)
+    return {"Txy_im": Txy.imag, "Txx": Txx, "Tyy": Tyy}
+
+def full_orbital_moment(P, H, coords):
+    """Full equilibrium current-loop orbital moment of a bounded system,
+      m_z = (1/2) sum_{a<b} I_ab (x_a y_b - y_a x_b),
+    with bond current I_ab = -2 Im(H_ab rho_ba) (e = hbar = 1, so units
+    e a^2 t1/hbar). This IS the physical magnetic moment of the flake
+    (line-current decomposition of (1/2) Int r x j); origin-independent
+    because equilibrium currents are divergence-free on every site."""
+    I = -2.0 * (H * P.T).imag          # I[a,b] = -2 Im(H_ab rho_ba)
+    x = coords[:, 0]
+    y = coords[:, 1]
+    cross = x[:, None] * y[None, :] - y[:, None] * x[None, :]
+    return 0.25 * np.sum(I * cross)    # 1/2 sum_{a<b} = 1/4 sum_{ab}
+
+
+# ---------------------------------------------------------------- periodic Haldane
+
+def haldane_bloch(k, t1=1.0, t2=0.2, phi=np.pi / 2, M=0.0):
+    """2-band Bloch Hamiltonian of the Haldane model. Basis conventions:
+    NN vectors d1=(0,1), d2=(-sqrt3/2,-1/2), d3=(sqrt3/2,-1/2) (a=1, NN
+    length 1); NNN vectors a_i connecting same sublattice. Same sign
+    conventions as the flake: NN=-t1, NNN=-t2 e^{i phi nu}."""
+    d = np.array([[0.0, 1.0],
+                  [-np.sqrt(3) / 2, -0.5],
+                  [np.sqrt(3) / 2, -0.5]])
+    avec = np.array([d[0] - d[1], d[1] - d[2], d[2] - d[0]])  # NNN, |a|=sqrt3
+    f = -t1 * np.sum(np.exp(1j * (avec_dot(k, d))))
+    # NNN with orientation: on sublattice A the counterclockwise NNN loop
+    # is +avec; on B it is -avec.
+    ka = avec_dot(k, avec)
+    epsA = -2 * t2 * np.sum(np.cos(ka - phi))
+    epsB = -2 * t2 * np.sum(np.cos(ka + phi))
+    H = np.array([[epsA + M, f],
+                  [np.conj(f), epsB - M]])
+    return H
+
+
+def avec_dot(k, vecs):
+    return vecs @ np.asarray(k)
+
+
+def fhs_chern(t1=1.0, t2=0.2, phi=np.pi / 2, M=0.0, nk=60):
+    """Fukui-Hatsugai-Suzuki Chern number of the LOWER band, plus min gap."""
+    b1 = 2 * np.pi * np.array([1 / np.sqrt(3), 1.0 / 3.0])
+    b2 = 2 * np.pi * np.array([-1 / np.sqrt(3), 1.0 / 3.0])
+    u = np.zeros((nk, nk, 2), dtype=complex)
+    gapmin = np.inf
+    for i in range(nk):
+        for j in range(nk):
+            k = (i / nk) * b1 + (j / nk) * b2
+            ev, U = np.linalg.eigh(haldane_bloch(k, t1, t2, phi, M))
+            u[i, j] = U[:, 0]
+            gapmin = min(gapmin, ev[1] - ev[0])
+    F = 0.0
+    for i in range(nk):
+        for j in range(nk):
+            u1 = u[i, j]
+            u2 = u[(i + 1) % nk, j]
+            u3 = u[(i + 1) % nk, (j + 1) % nk]
+            u4 = u[i, (j + 1) % nk]
+            prod = (np.vdot(u1, u2) * np.vdot(u2, u3)
+                    * np.vdot(u3, u4) * np.vdot(u4, u1))
+            F += np.angle(prod)
+    return F / (2 * np.pi), gapmin
+
+
+def haldane_k_response(t1=1.0, t2=0.2, phi=np.pi / 2, M=0.0, nk=120,
+                       Egrid=None, eta_broad=0.1, mu=None):
+    """k-space response of the periodic Haldane model (lower band filled).
+    Returns dict with metric integral (localization tensor per cell),
+    Berry curvature integral (Chern), sigma_xx(E), moments per cell, and
+    the FULL modern-theory orbital magnetization
+      M_orb = (e/hbar) Im  Int d2k/(2pi)^2 < dx u | (H + E - 2 mu) | dy u >
+    for the occupied band (mu in the gap), plus its interband piece.
+    Cell area A_c = 3 sqrt(3)/2.
+    """
+    b1 = 2 * np.pi * np.array([1 / np.sqrt(3), 1.0 / 3.0])
+    b2 = 2 * np.pi * np.array([-1 / np.sqrt(3), 1.0 / 3.0])
+    Ac = 3 * np.sqrt(3) / 2
+    bz_area = (2 * np.pi) ** 2 / Ac
+    dk = 1e-5
+    S0 = np.zeros((2, 2), dtype=complex)
+    Sm1 = np.zeros((2, 2), dtype=complex)
+    S1 = np.zeros((2, 2), dtype=complex)
+    omega_int = 0.0        # integral of Omega(k) d2k
+    Morb = 0.0             # integrand accumulator (see below)
+    Minter = 0.0
+    qE = np.zeros(len(Egrid)) if Egrid is not None else None
+    qExy = np.zeros(len(Egrid), dtype=complex) if Egrid is not None else None
+    trans_dE, trans_qxy = [], []   # raw per-k transitions (exact sums)
+    Emin, Emax = np.inf, -np.inf
+    gapmin = np.inf
+    if mu is None:
+        # pre-scan for midgap chemical potential (top of lower band /
+        # bottom of upper band on a coarse grid)
+        lo, hi = -np.inf, np.inf
+        for i in range(40):
+            for j in range(40):
+                k = (i / 40) * b1 + (j / 40) * b2
+                ev = np.linalg.eigvalsh(haldane_bloch(k, t1, t2, phi, M))
+                lo = max(lo, ev[0]); hi = min(hi, ev[1])
+        mu = 0.5 * (lo + hi)
+    for i in range(nk):
+        for j in range(nk):
+            k = (i / nk) * b1 + (j / nk) * b2
+            ev, U = np.linalg.eigh(haldane_bloch(k, t1, t2, phi, M))
+            uo, ue = U[:, 0], U[:, 1]
+            Emin, Emax = min(Emin, ev[0]), max(Emax, ev[1])
+            gapmin = min(gapmin, ev[1] - ev[0])
+            # interband Berry connection amplitudes A_mu = <ue| d_mu uo>
+            amps = []
+            for mu_dir in range(2):
+                kp = np.array(k, float); km = np.array(k, float)
+                kp[mu_dir] += dk; km[mu_dir] -= dk
+                dH = (haldane_bloch(kp, t1, t2, phi, M)
+                      - haldane_bloch(km, t1, t2, phi, M)) / (2 * dk)
+                amps.append(np.vdot(ue, dH @ uo) / (ev[0] - ev[1]))
+            ax, ay = amps
+            dE = ev[1] - ev[0]
+            # k-space QGT of the occupied band: Q_{mu nu}(k) = A_mu A_nu^*
+            for m, am in enumerate((ax, ay)):
+                for n, an in enumerate((ax, ay)):
+                    q = am * np.conj(an)
+                    S0[m, n] += q
+                    Sm1[m, n] += q / dE
+                    S1[m, n] += q * dE
+            # Omega(k) = -2 Im Q_xy(k)
+            omega_int += -2.0 * (ax * np.conj(ay)).imag
+            # modern-theory orbital magnetization (one occupied band, mu in gap):
+            # M = (e/2hbar) Im Int d2k/(2pi)^2 <du| x (H + E - 2 mu) |du>_z
+            #   = (e/hbar) Im Int d2k/(2pi)^2 <dx u|(H + E_o - 2 mu)|dy u>
+            # interband part of |d_mu u> = A_mu |ue>; H acts as E_e there.
+            Morb += (np.conj(ax) * ay * (ev[1] + ev[0] - 2 * mu)).imag
+            Minter += (np.conj(ax) * ay * (ev[1] - ev[0])).imag
+            if qE is not None:
+                w = (eta_broad / np.pi) / ((Egrid - dE) ** 2 + eta_broad ** 2)
+                qE += w * np.abs(ax) ** 2   # xx channel
+                qExy += w * (ax * np.conj(ay))  # xy channel (complex)
+            trans_dE.append(dE)
+            trans_qxy.append(ax * np.conj(ay))
+    dA = bz_area / (nk * nk)               # k-space measure per grid point
+    out = {
+        "Ac": Ac, "Emin": Emin, "Emax": Emax, "gapmin": gapmin,
+        # localization tensor per cell = Ac * Int d2k/(2pi)^2 Q(k)
+        "S0_cell": S0 * dA / (2 * np.pi) ** 2 * Ac,
+        "Sm1_cell": Sm1 * dA / (2 * np.pi) ** 2 * Ac,
+        "S1_cell": S1 * dA / (2 * np.pi) ** 2 * Ac,
+        "chern_from_curvature": omega_int * dA / (2 * np.pi),
+        "Morb_cell": Morb * dA / (2 * np.pi) ** 2 * Ac,
+        "Minter_cell": Minter * dA / (2 * np.pi) ** 2 * Ac,
+    }
+    if qE is not None:
+        # per-cell energy-resolved Q_xx(E), Q_xy(E)
+        out["qE_xx"] = qE * dA / (2 * np.pi) ** 2 * Ac
+        out["qE_xy"] = qExy * dA / (2 * np.pi) ** 2 * Ac
+    # exact per-transition list (per cell): sum of qxy_weights = S0_cell_xy
+    out["trans_dE"] = np.array(trans_dE)
+    out["trans_qxy"] = np.array(trans_qxy) * dA / (2 * np.pi) ** 2 * Ac
+    return out
+
+# ------------------------------------------------------- periodic torus (PBC)
+
+def honeycomb_torus(L, t1=1.0, delta=0.0):
+    """Honeycomb lattice on an L x L torus (PBC in both lattice directions)
+    with real NN hopping -t1 and staggered onsite +delta on sublattice 0,
+    -delta on sublattice 1 (BN-type; same mass sign as haldane_flake_H).
+
+    Units: a = NN bond length = 1, energies in t1. Site order: cells (i, j)
+    row-major, A then B, so sites (0, 1) are cell (0, 0) -- the 'central
+    cell' rows for per-cell loop scans (translation invariance makes one
+    cell exhaustive). NN bonds found by minimum image over the L a1, L a2
+    superlattice; needs L >= 3 so images are unambiguous. Choose L divisible
+    by 3 so the K points are in the discrete k-set and the half-filling gap
+    is exactly 2 delta (worst case), never accidentally enlarged.
+
+    Returns (coords[N,2], sub[N], H[N,N] complex Hermitian), N = 2 L^2.
+    """
+    if L < 3:
+        raise ValueError("honeycomb_torus needs L >= 3 (minimum image)")
+    a1 = np.array([np.sqrt(3.0), 0.0])
+    a2 = np.array([np.sqrt(3.0) / 2.0, 1.5])
+    tau = [np.array([0.0, 0.0]), np.array([0.0, 1.0])]
+    coords, sub = [], []
+    for i in range(L):
+        for j in range(L):
+            for s in range(2):
+                coords.append(i * a1 + j * a2 + tau[s])
+                sub.append(s)
+    coords = np.array(coords)
+    sub = np.array(sub, dtype=int)
+    N = 2 * L * L
+    H = np.zeros((N, N), dtype=complex)
+    # minimum-image NN detection: distance 1 modulo the superlattice
+    shifts = [n1 * L * a1 + n2 * L * a2
+              for n1 in (-1, 0, 1) for n2 in (-1, 0, 1)]
+    for p in range(N):
+        for q in range(p + 1, N):
+            d0 = coords[p] - coords[q]
+            dmin = min(np.linalg.norm(d0 + s) for s in shifts)
+            if abs(dmin - 1.0) < 1e-6:
+                H[p, q] = -t1
+                H[q, p] = -t1
+    if delta != 0.0:
+        H += np.diag(delta * (1 - 2 * sub).astype(float))
+    return coords, sub, H
+
+
+def max_im_loop(P, rows=None):
+    """max_{abc} |Im b_abc|, b_abc = P_ab P_bc P_ca (oriented three-center
+    loop index; basis-rephasing invariant). rows restricts the FIRST index a
+    (e.g. the two sites of one torus cell: by translation invariance every
+    loop touches some cell, so one cell's rows scan all loops per cell).
+    Full scan is O(N^3) memory (~16 N^3 bytes) -- fine to N ~ 150."""
+    A = np.arange(P.shape[0]) if rows is None else np.asarray(rows, dtype=int)
+    T = np.einsum("ab,bc,ca->abc", P[A, :], P, P[:, A], optimize=True)
+    # repeated-index 'triples' (a=b, b=c, c=a) are automatically real
+    # (rho_ab rho_ba = |rho_ab|^2, rho_aa real), so no exclusion needed here.
+    return float(np.max(np.abs(T.imag)))
+
+
+def max_abs_loop(P, rows=None):
+    """max_{abc} |b_abc| over GENUINE triples (a, b, c pairwise distinct),
+    same scan set as max_im_loop. Reported ALONGSIDE max|Im b| so a
+    STRUCTURAL zero (|b| = 0 on every triangle, e.g. plain benzene where
+    rho_{i,i+2} = 0 for the occupied set kills every loop) cannot
+    masquerade as the T-symmetry statement 'Im b = 0 on loops that are
+    actually alive'. Repeated-index triples are excluded because their
+    |b| ~ occupation products, not three-center loop structure."""
+    A = np.arange(P.shape[0]) if rows is None else np.asarray(rows, dtype=int)
+    T = np.einsum("ab,bc,ca->abc", P[A, :], P, P[:, A], optimize=True)
+    ii = np.arange(P.shape[0])
+    T[:, ii, ii] = 0.0                 # b == c
+    for ia, a in enumerate(A):
+        T[ia, a, :] = 0.0              # b == a
+        T[ia, :, a] = 0.0              # c == a
+    return float(np.max(np.abs(T)))
+
+
+def berry_curvature_field(t1=1.0, t2=0.0, phi=0.0, M=0.0, nk=240):
+    """FHS plaquette Berry-curvature FIELD of the LOWER band of
+    haldane_bloch (t2=0 gives the BN/Semenoff model). Returns
+    (X, Y, omega, chern): X, Y are (nk+1, nk+1) Cartesian corner grids of
+    the (b1, b2) parallelogram BZ (pcolormesh-ready), omega[i, j] is the
+    plaquette Berry flux divided by the plaquette area (units a^2, gauge
+    invariant), chern = total flux / 2 pi. K sits at reduced (2/3, 1/3)
+    -> plaquette index (2 nk/3, nk/3); K' at (1/3, 2/3) -> (nk/3, 2 nk/3);
+    use nk divisible by 3 to land exactly on them."""
+    b1 = 2 * np.pi * np.array([1 / np.sqrt(3), 1.0 / 3.0])
+    b2 = 2 * np.pi * np.array([-1 / np.sqrt(3), 1.0 / 3.0])
+    Ac = 3 * np.sqrt(3) / 2
+    plaq_area = (2 * np.pi) ** 2 / Ac / nk ** 2
+    u = np.zeros((nk, nk, 2), dtype=complex)
+    for i in range(nk):
+        for j in range(nk):
+            k = (i / nk) * b1 + (j / nk) * b2
+            _, U = np.linalg.eigh(haldane_bloch(k, t1, t2, phi, M))
+            u[i, j] = U[:, 0]
+    omega = np.zeros((nk, nk))
+    for i in range(nk):
+        for j in range(nk):
+            u1 = u[i, j]
+            u2 = u[(i + 1) % nk, j]
+            u3 = u[(i + 1) % nk, (j + 1) % nk]
+            u4 = u[i, (j + 1) % nk]
+            prod = (np.vdot(u1, u2) * np.vdot(u2, u3)
+                    * np.vdot(u3, u4) * np.vdot(u4, u1))
+            omega[i, j] = np.angle(prod) / plaq_area
+    frac = np.arange(nk + 1) / nk
+    F1, F2 = np.meshgrid(frac, frac, indexing="ij")
+    X = F1 * b1[0] + F2 * b2[0]
+    Y = F1 * b1[1] + F2 * b2[1]
+    chern = float(np.sum(omega) * plaq_area / (2 * np.pi))
+    return X, Y, omega, chern
+
+# ---------------------------------------------------------------- local marker
+
+def local_chern_marker(P, coords, cell_area=3 * np.sqrt(3) / 2):
+    """Local Chern marker per site, C_i = +4*pi/A_site * Im [P X Q Y P]_{ii},
+    A_site = cell_area / 2 (two sites per honeycomb cell).
+    SIGN PINNED EMPIRICALLY to the FHS k-space Chern number for this
+    package's Hamiltonian conventions (NN = -t1, NNN = -t2 e^{i phi nu});
+    same resolution as the 2026-07-02 Table-I requote finding (the naive
+    -4pi Bianco-Resta transcription gave -0.999 vs FHS +1)."""
+    N = P.shape[0]
+    Q = np.eye(N) - P
+    X = np.diag(coords[:, 0].astype(complex))
+    Y = np.diag(coords[:, 1].astype(complex))
+    Mmat = P @ X @ Q @ Y @ P
+    A_site = cell_area / 2.0
+    return 4 * np.pi / A_site * np.diag(Mmat).imag

@@ -1,0 +1,411 @@
+#!/usr/bin/env python3
+"""V15 Figure 3 candidate; matched real-space chirality and geometric spectrum.
+
+Reuses the September loop drawing without running its output-writing section.
+All outputs are new filenames. No manuscript or existing figure is overwritten.
+Run on Studio with ~/venvs/sci/bin/python. --render reuses the exact saved data.
+"""
+import sys, json, hashlib, socket, shutil
+from pathlib import Path
+import numpy as np
+from scipy.linalg import eigh
+from scipy.ndimage import gaussian_filter1d
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import tbcore as tb
+
+ROOT = Path('/Users/raquelqueiroz/orlt_atlas_work')
+BASE = Path(__file__).resolve().parent.parent
+STEM = 'bonding_fig3_transverse_v15_candidate_20260918'
+FIGSTEM = STEM+'_r14'
+SOURCE = ROOT/'bonding_v15_original_lattice_sign_examples_20260912.py'
+AC = 3*np.sqrt(3)/2
+Q_SCALE = AC/(2*np.pi)  # Chern-density spectrum -> -2 Im Qxy per electron.
+EGRID = np.linspace(0, 12, 12001)
+ETA = .075  # Gaussian standard deviation in units of t; display broadening only.
+assert 'rqlab-studio' in socket.gethostname()
+
+# Load definitions only, without executing the old producer's saves.
+ns = {'__file__':str(SOURCE)}
+exec(compile(SOURCE.read_text().split('m.panel_benzene=')[0], str(SOURCE), 'exec'), ns)
+m = ns['m']
+
+def panel_flake_grouped(ax,pos,hexes,P,C):
+    """Six sign-verified finite-projector examples, grouped by visible hexagon."""
+    m.frame(ax,(-6.8,6.8),(-8.7,7.0));ns['skeleton'](ax,pos,1.0)
+    groups=[('positive',[-np.sqrt(3)/2,1.5],[[26,25,24],[38,39,40]],
+             [1,1,np.sqrt(3)],1),
+            ('negative',[3*np.sqrt(3)/2,-1.5],[[70,69,80],[68,81,82]],
+             [1,np.sqrt(3),2],-1),
+            ('star',[-np.sqrt(3)/2,-1.5],[[37,35,52],[36,51,53]],
+             [np.sqrt(3)]*3,1)]
+    records=[]
+    for name,center,triangles,sides,sign in groups:
+        center=np.asarray(center)
+        matching=[ring for c,ring in hexes if np.linalg.norm(c-center)<1e-8]
+        assert len(matching)==1
+        for ids in triangles:
+            assert set(ids)<=set(matching[0])
+            q=pos[ids];u=q[1]-q[0];v=q[2]-q[0]
+            lengths=np.sort(np.linalg.norm(q-np.roll(q,1,axis=0),axis=1))
+            assert np.max(abs(lengths-sides))<1e-8
+            rec=ns['loop'](ax,pos,P,ids,.20,lw=1.0)
+            assert sign*rec['weight_raw']>1e-8
+            order=list(map(int,m.oriented(ids,P)))
+            a,b,c=ids;product=P[a,b]*P[b,c]*P[c,a]
+            rec.update(group=name,hexagon_center=center.tolist(),
+                       hexagon_ring=list(map(int,matching[0])),
+                       side_lengths=lengths.tolist(),
+                       signed_area=float((u[0]*v[1]-u[1]*v[0])/2),
+                       projector_product=[float(product.real),float(product.imag)],
+                       arrow_order=order)
+            records.append(rec)
+    m.draw_nodes(ax,pos,m.omega_fills(C),ms=4.6)
+    audit=dict(N=len(pos),boundary='open',triangles=records,
+               normalization='w=8 pi Axy Im(Pab Pbc Pca), in a^2; a is nearest-neighbor bond length',
+               parameters=dict(t1=1,t2=1,phi=float(np.pi/2),phase_sign=-1,mass=0,half_filling=True),
+               interpretation='Selected examples, not a complete decomposition or cancellation group. Same cell means a visible hexagon.',
+               site_sum=float(C.sum()))
+    ns['records']['haldane']=audit
+    (ROOT/(FIGSTEM+'_loops.json')).write_text(json.dumps(audit,indent=2))
+    shutil.copy2(ROOT/(FIGSTEM+'_loops.json'),BASE/'data'/(FIGSTEM+'_loops.json'))
+
+def shell_positions(shell):
+    a1=np.array([np.sqrt(3),0]); a2=np.array([np.sqrt(3)/2,1.5])
+    centers=[i*a1+j*a2 for i in range(-shell,shell+1)
+             for j in range(-shell,shell+1) if max(abs(i),abs(j),abs(i+j))<=shell]
+    verts={}
+    for c in centers:
+        for th in np.deg2rad(90+60*np.arange(6)):
+            p=c+np.array([np.cos(th),np.sin(th)])
+            verts[tuple(np.round(p,9))]=p
+    return np.array(list(verts.values()))
+
+def hamiltonian(pos,t2=1):
+    # Same shared-neighbor Haldane prescription as the actual top-row producer.
+    d=np.linalg.norm(pos[:,None]-pos[None,:],axis=-1)
+    nn=np.abs(d-1)<1e-7
+    H=-nn.astype(complex)
+    for i,j in zip(*np.where(np.triu(abs(d-np.sqrt(3))<1e-7,1))):
+        common=np.where(nn[i]&nn[j])[0]
+        if not len(common): continue
+        v1=pos[common[0]]-pos[i]; v2=pos[j]-pos[common[0]]
+        nu=np.sign(v1[0]*v2[1]-v1[1]*v2[0])
+        H[i,j]=-t2*np.exp(-1j*np.pi/2*nu); H[j,i]=H[i,j].conjugate()
+    return H
+
+def finite(pos,t2=1):
+    H=hamiltonian(pos,t2); ev,U=eigh(H,driver='evd'); no=len(pos)//2
+    P=U[:,:no]@U[:,:no].conj().T
+    de,rx,ry=tb.transition_data(ev,U,pos,no)
+    z=rx*ry.conj(); area=no*AC
+    w=-4*np.pi/area*z.imag
+    assert ev[no]-ev[no-1]>1e-8
+    assert abs(w.sum())<2e-11
+    # Verify exact spectral sum against full operator trace, and energy moment.
+    op=tb.qgt_operator(P,pos)[0,1]
+    assert abs(z.sum()-op)<1e-8
+    moment=tb.interband_orbital_moment(P,H,pos)['Txy_im']
+    assert abs(moment-np.sum(de*z).imag)<1e-8
+    # Full finite orbital moment is zero in this particle-hole symmetric model.
+    full=tb.full_orbital_moment(P,H,pos)
+    assert abs(full)<1e-8
+    radii=np.linalg.norm(pos,axis=1)
+    nn=abs(np.linalg.norm(pos[:,None]-pos[None,:],axis=-1)-1)<1e-7
+    edge=nn.sum(axis=1)<3
+    # Boundary plus two NN graph layers (fixed microscopic width).
+    for _ in range(2):edge=edge|np.any(nn[:,edge],axis=1)
+    edge_prob=np.sum(abs(U[edge])**2,axis=0)
+    ij=np.unravel_index(np.argmin(de),de.shape)
+    low=de<.75
+    marker=4*np.pi*np.einsum('ij,ji->i',(P*pos[:,0])@(P*pos[:,1]),P).imag
+    if len(pos)<=96: assert np.max(abs(marker-m.omega_per_site(pos,P)))<1e-10
+    groups={}
+    for ee,ww in zip(de.ravel(),w.ravel()):
+        if abs(ww)>1e-10:groups[round(float(ee),10)]=groups.get(round(float(ee),10),0)+float(ww)
+    rec=dict(N=len(pos),t2=t2,gap=float(de.min()),integral=float(w.sum()),
+             eigenvalues=ev.tolist() if len(pos)==6 else None,
+             max_im_loop=tb.max_im_loop(P) if len(pos)==6 else None,
+             spectral_lines=groups if len(pos)==6 else None,
+             low_weight=float(w[low].sum()),low_centroid=float(np.sum(w[low]*de[low])/w[low].sum()) if np.any(low) and abs(w[low].sum())>1e-12 else None,
+             strongest_weight=float(w.flat[np.argmax(abs(w))]),
+             edge_gap_states=[float(edge_prob[ij[0]]),float(edge_prob[no+ij[1]])],
+             edge_definition='degree<3 sites plus two nearest-neighbor graph layers',
+             edge_fraction_sites=float(edge.mean()),
+             optical_first_moment_per_area=float(moment/area),full_moment_per_area=float(full/area),
+             marker_sum=float(marker.sum()),central_marker_C=float(2/AC*marker[radii<1.2].mean()),
+             max_site_marker=float(abs(marker).max()),
+             projector_match_original=float(np.max(abs(P-m.haldane_rho(pos,t2)))) if len(pos)<=96 else None)
+    assert abs(rec['marker_sum'])<1e-7
+    if len(pos)<=96: assert rec['projector_match_original']<1e-12
+    return de.ravel(),w.ravel(),rec
+
+def bloch(nk):
+    # Build a bulk hopping catalogue from the finite producer, including embedding.
+    a1=np.array([np.sqrt(3),0]); a2=np.array([np.sqrt(3)/2,1.5]); tau=np.array([[0,0],[0,1]])
+    rows=[(i,j,s) for i in range(-2,3) for j in range(-2,3) for s in range(2)]
+    pos=np.array([i*a1+j*a2+tau[s] for i,j,s in rows]); H=hamiltonian(pos)
+    hops=[]
+    for a in range(2):
+        ia=rows.index((0,0,a))
+        for j in np.flatnonzero(abs(H[ia])>1e-12):
+            hops.append((a,rows[j][2],pos[j]-pos[ia],H[ia,j]))
+    B=2*np.pi*np.linalg.inv(np.array([a1,a2])).T
+    f=np.arange(nk)/nk
+    mesh=np.array(np.meshgrid(f,f,indexing='ij')).reshape(2,-1).T
+    k=mesh@B
+    hk=np.zeros((len(k),2,2),complex); hx=hk.copy(); hy=hk.copy()
+    for a,b,d,h in hops:
+        v=h*np.exp(1j*k@d); hk[:,a,b]+=v; hx[:,a,b]+=1j*d[0]*v; hy[:,a,b]+=1j*d[1]*v
+    ev,U=np.linalg.eigh(hk); uo=U[:,:,0]; ue=U[:,:,1]; de=ev[:,1]-ev[:,0]
+    ax=np.einsum('ka,kab,kb->k',ue.conj(),hx,uo)/(-de)
+    ay=np.einsum('ka,kab,kb->k',ue.conj(),hy,uo)/(-de)
+    z=ax.conj()*ay
+    w=-4*np.pi/AC*z.imag/len(k)
+    # Independent gauge-invariant plaquette check in periodic orbital gauge.
+    up=uo*np.exp(1j*(k@tau.T))
+    up=up.reshape(nk,nk,2)
+    lx=np.sum(up.conj()*np.roll(up,-1,axis=0),axis=-1)
+    ly=np.sum(up.conj()*np.roll(up,-1,axis=1),axis=-1)
+    flux=-np.angle(lx*np.roll(ly,-1,axis=0)*np.roll(lx,-1,axis=1).conj()*ly.conj())
+    fhs=flux.sum()/(2*np.pi)
+    assert abs(fhs-1)<1e-10
+    assert abs(w.sum()-fhs)<1e-6
+    # Physical full M (e/hbar units), not the optical first moment.
+    full=((ev[:,0]+ev[:,1])*z.imag).mean()/AC
+    optical=(de*z.imag).mean()/AC
+    assert abs(full)<1e-12
+    return de,w,dict(nk=nk,C=float(w.sum()),C_plaquette=float(fhs),gap=float(de.min()),
+                    optical_first_moment_per_area=float(optical),full_M_mu0=float(full),
+                    dM_dmu=float(-2*z.imag.mean()/AC))
+
+def broaden_grid(de,w,grid,eta):
+    dx=grid[1]-grid[0];p=de/dx;lo=np.floor(p).astype(int);f=p-lo
+    assert lo.min()>=0 and lo.max()+1<len(grid)
+    hist=(np.bincount(lo,weights=w*(1-f),minlength=len(grid))+
+          np.bincount(lo+1,weights=w*f,minlength=len(grid)))/dx
+    return gaussian_filter1d(hist,eta/dx,mode='mirror')
+
+def broaden(de,w,eta=ETA):
+    # Gaussian display only: linear deposit then reflected kernel at E=0.
+    # Reflection preserves area on E>=0; exact sums use unbroadened lines.
+    return broaden_grid(de,w,EGRID,eta)
+
+def broadening_checks(data):
+    result={}
+    for name in data:
+        if not name.endswith('_de'):continue
+        key=name[:-3]
+        for eta in (.025,.055,.10):
+            curve=broaden(data[key+'_de'],data[key+'_w'],eta)
+            val=float(np.trapezoid(curve,EGRID));exact=float(data[key+'_w'].sum())
+            assert abs(val-exact)<1e-10
+            result[f'{key}_eta{eta}']=dict(integral=val,exact=exact)
+    return result
+
+def sign_fill(ax,y,alpha=.18):
+    ax.fill_between(EGRID,y,0,where=y>=0,interpolate=True,color=ns['RED'],alpha=alpha,lw=0,rasterized=True,zorder=.7)
+    ax.fill_between(EGRID,y,0,where=y<=0,interpolate=True,color=ns['BLUE'],alpha=alpha,lw=0,rasterized=True,zorder=.7)
+
+def qcurve(data,key):
+    """-2 Im Qxy(E), Q=T/Ne. Units dNN^2/t; Q_SCALE*C(E)."""
+    return Q_SCALE*broaden(data[key+'_de'],data[key+'_w'])
+
+def size_comparison():
+    """Compare saved sizes without recomputation or changing prior numerical files."""
+    from scipy.signal import find_peaks
+    data=dict(np.load(ROOT/(STEM+'_data.npz')))
+    for size in (2400,5400):
+        data.update(dict(np.load(ROOT/(STEM+f'_N{size}_data.npz'))))
+    reference=qcurve(data,'bulk');window=EGRID>=1.5
+    result=dict(parameters=dict(t1=1,t2=1,phi=float(np.pi/2),phase_sign=-1,mass=0,half_filling=True),
+                gaussian_sigma=ETA,energy_grid_spacing=float(EGRID[1]),
+                normalization='Q per electron, plotted -2 Im Qxy(E) in a^2/t; Ac=3 sqrt(3) a^2/2',
+                onset_definition='First E/t>1.7 where broadened curve exceeds 10 percent of the bulk maximum; not an exact optical gap',
+                relative_L1_definition='Integral from E/t=1.5 to12 of abs(finite-bulk), divided by bulk integral on same interval',
+                records={})
+    for key in ('flake1536','flake2400','flake5400','bulk'):
+        curve=qcurve(data,key);peaks=find_peaks(curve)[0]
+        peaks=peaks[(EGRID[peaks]>1.9)&(EGRID[peaks]<3)&(curve[peaks]>.1*reference.max())]
+        result['records'][key]=dict(raw_minimum_transition=float(data[key+'_de'].min()),
+            exact_ImQ_integral=float(-.5*Q_SCALE*data[key+'_w'].sum()),
+            rendered_ImQ_integral=float(-.5*np.trapezoid(curve,EGRID)),
+            positive_onset_threshold=float(EGRID[np.flatnonzero((EGRID>1.7)&(curve>.1*reference.max()))[0]]),
+            global_positive_peak_E=float(EGRID[curve.argmax()]),global_positive_peak_height=float(curve.max()),
+            positive_local_peaks=[dict(E=float(EGRID[i]),height=float(curve[i])) for i in peaks],
+            negative_minimum_E=float(EGRID[curve.argmin()]),negative_minimum=float(curve.min()),
+            relative_L1_above_1p5=float(np.trapezoid(abs(curve[window]-reference[window]),EGRID[window])/np.trapezoid(reference[window],EGRID[window])))
+        assert abs(result['records'][key]['exact_ImQ_integral']-result['records'][key]['rendered_ImQ_integral'])<1e-10
+    dest=ROOT/(FIGSTEM+'_convergence.json');dest.write_text(json.dumps(result,indent=2))
+    shutil.copy2(dest,BASE/'data'/dest.name)
+    for size in (2400,5400):
+        for suffix in ('_data.npz','_checks.json'):
+            src=ROOT/(STEM+f'_N{size}'+suffix);shutil.copy2(src,BASE/'data'/src.name)
+    print(json.dumps(result,indent=2),flush=True)
+
+def compute():
+    data={'Egrid':EGRID}; report={'host':socket.gethostname(),'eta':ETA,'Ac':AC,'records':{}}
+    cases={'benzene':m.benzene_positions(),'coronene':m.coronene_positions(),'flake96':m.hexagonal_flake(m.FLAKE_RCUT)[0]}
+    for s in (5,7,11,15): cases[f'flake{6*(s+1)**2}']=shell_positions(s)
+    for key,pos in cases.items():
+        print('Computing',key,flush=True)
+        de,w,r=finite(pos); data[key+'_de']=de;data[key+'_w']=w
+        report['records'][key]=r; print(r,flush=True)
+    for nk in (120,240,480):
+        de,w,r=bloch(nk);report['records'][f'bulk{nk}']=r;print(r,flush=True)
+    data['bulk_de']=de;data['bulk_w']=w
+    # Recover t2=.2 molecular contrast, in the SAME chirality as v15.
+    p=m.benzene_positions();H=hamiltonian(p,.2);ev,U=eigh(H);P=U[:,:3]@U[:,:3].conj().T
+    de,w,r=finite(p,.2)
+    r['max_im_loop']=tb.max_im_loop(P);r['max_spectral_line']=float(abs(w).max())
+    report['benzene_old_parameter_control']=r
+    assert r['max_im_loop']<1e-12 and r['max_spectral_line']>.1
+    report['benzene_crossing']=[]
+    for t2 in (.55,1/np.sqrt(3)-1e-4,1/np.sqrt(3)+1e-4,.60):
+        de,w,r=finite(p,t2);report['benzene_crossing'].append(r)
+    report['broadening_integrals']=broadening_checks(data)
+    np.savez_compressed(ROOT/(STEM+'_data.npz'),**data)
+    (ROOT/(STEM+'_checks.json')).write_text(json.dumps(report,indent=2))
+    return data,report
+
+def render(data,report,layout_only=False):
+    m.panel_benzene=ns['panel_benzene'];m.panel_coronene=ns['panel_coronene'];m.panel_flake=panel_flake_grouped
+    fig=m.build_figure()
+    # Keep the existing top-row dimensions exactly, adding space below.
+    old_height=3.2;new_height=5.5;fig.set_size_inches(7.6,new_height)
+    shift=(new_height-old_height)/new_height;scale=old_height/new_height
+    for ax in fig.axes:
+        p=ax.get_position(original=True);ax.set_position([p.x0,shift+scale*p.y0,p.width,scale*p.height])
+        for t in list(ax.texts):
+            if t.get_text().lower() in ['positive','negative']: t.remove()
+    for t in fig.texts:
+        x,y=t.get_position();t.set_position((x,shift+scale*y))
+        s=t.get_text()
+        if s.startswith('$\\mathrm{Im'):t.set_text('Full site sum $=0$')
+        elif s.startswith('local '):t.set_text('Local $M_i\\neq0$\nMolecular sum $=0$')
+        elif s.startswith('open boundaries:'):t.set_text('Open boundaries: sum $=0$\nPeriodic bulk: $C=+1$')
+    cax=fig.axes[-1];cax.clear()
+    sm=m.plt.cm.ScalarMappable(cmap=m.CMAP,norm=matplotlib.colors.Normalize(-m.VSCALE,m.VSCALE))
+    cb=fig.colorbar(sm,cax=cax,ticks=[-1,0,1],extend='both');cb.ax.tick_params(labelsize=8)
+    cb.set_label(r'$M_i/a^2$',fontsize=9)
+    gs=fig.add_gridspec(1,3,left=.080,right=.920,bottom=.093,top=.343,wspace=.22)
+    colors=['#0077bb','#cc3311','#009988']
+    for j,key in enumerate(['benzene','coronene','flake864']):
+        ax=fig.add_subplot(gs[j]);ax.axhline(0,color='.65',lw=.65)
+        curve=qcurve(data,key);sign_fill(ax,curve,.12 if j==2 else .24)
+        ax.plot(EGRID,curve,color=colors[j],lw=1.35,label=r'$N=864,\ C=0$' if j==2 else None)
+        ax.set_xlim(0,11);ax.set_xticks([0,5,10]);ax.tick_params(labelsize=8)
+        ax.set_xlabel(r'$E/t$',fontsize=9,labelpad=1)
+        ax.set_title(['d) Benzene','e) Coronene','f) Haldane'][j],loc='left',fontsize=10,pad=7)
+        if j==0:ax.set_ylabel(r'$-2\,\mathrm{Im}\,\mathcal{Q}^{xy}(E)\ (a^2/t)$',fontsize=9,labelpad=3)
+        if j==2:
+            bulk_curve=qcurve(data,'bulk')
+            sign_fill(ax,bulk_curve,.14)
+            ax.plot(EGRID,bulk_curve,color='black',lw=1.5,ls='-',label=r'Bulk, $C=+1$')
+            ax.set_xlim(-.45,11)
+            ax.set_ylim(1.12*min(curve.min(),bulk_curve.min()),1.18*max(curve.max(),bulk_curve.max())+.03)
+            ax.legend(fontsize=8,frameon=False,loc='lower right',bbox_to_anchor=(1,.06),
+                      handlelength=1.7,labelspacing=.6,handletextpad=.6)
+            # Point to the upper half of the peak's right flank, leaving labels below.
+            trough=np.flatnonzero(EGRID<.75)[np.argmin(curve[EGRID<.75])]
+            flank=np.flatnonzero((EGRID>=EGRID[trough])&(EGRID<.75))
+            edge_idx=flank[np.argmin(abs(curve[flank]-.45*curve[trough]))]
+            ax.annotate('edge states',xy=(EGRID[edge_idx],curve[edge_idx]),
+                        xytext=(.25,.59),textcoords='axes fraction',ha='left',va='center',fontsize=7,
+                        arrowprops=dict(arrowstyle='->',lw=.8,color='#333333',shrinkB=4))
+        else:
+            ax.text(.98,.07,r'$C=0$',transform=ax.transAxes,ha='right',va='bottom',fontsize=8)
+    for ext in ['png','pdf']:fig.savefig(ROOT/(FIGSTEM+'.'+ext),dpi=600,facecolor='white')
+    plt.close(fig)
+    if layout_only:
+        for ext in ['png','pdf']:
+            shutil.copy2(ROOT/(FIGSTEM+'.'+ext),BASE/'figures/main'/(FIGSTEM+'.'+ext))
+        print('Layout-only candidate:',ROOT/(FIGSTEM+'.pdf'),flush=True)
+        return
+    # Separate validation sheet: convergence and unbroadened cumulative weights.
+    fig,axs=plt.subplots(1,3,figsize=(10.8,3.2));fig.subplots_adjust(left=.075,right=.99,bottom=.20,top=.88,wspace=.43)
+    keys=['flake96','flake216','flake384','flake864','flake1536'];cols=['#0077bb','#33bbee','#009988','#ee7733','#cc3311']
+    for key,c in zip(keys,cols):
+        r=report['records'][key];de=data[key+'_de'];w=data[key+'_w']
+        axs[0].plot(EGRID,broaden(de,w),color=c,label=str(r['N']),lw=1.1)
+        order=np.argsort(de);axs[1].step(np.r_[0,de[order]],np.r_[0,np.cumsum(w[order])],where='post',color=c,lw=1.0)
+    axs[0].set_xlim(0,.8);axs[0].set_xlabel(r'$E/t_1$');axs[0].set_ylabel(r'$t_1\mathcal{C}(E)$');axs[0].legend(title='$N$',fontsize=7,ncol=2,frameon=False)
+    axs[1].set_xlim(0,11);axs[1].set_xlabel(r'$E/t_1$');axs[1].set_ylabel(r'$\int_0^E\mathcal{C}(E\prime)\,dE\prime$')
+    de=data['bulk_de'];w=data['bulk_w'];order=np.argsort(de);axs[1].step(np.r_[0,de[order]],np.r_[0,np.cumsum(w[order])],where='post',color='k',ls='--',lw=1.1)
+    rr=[report['records'][k] for k in keys];x=np.array([1/np.sqrt(r['N']) for r in rr]);y=np.array([r['gap'] for r in rr])
+    axs[2].plot(x,y,'o-',color='#0077bb',ms=4);axs[2].set_xlabel(r'$1/\sqrt{N}$');axs[2].set_ylabel(r'$\Delta_N/t_1$');axs[2].set_xlim(left=0);axs[2].set_ylim(bottom=0)
+    for ax,title in zip(axs,['Edge spectrum','Exact integral','Lowest transition']):ax.axhline(0,color='.6',lw=.6);ax.set_title(title,loc='left',fontsize=10)
+    for ext in ['png','pdf']:fig.savefig(ROOT/(STEM+'_validation.'+ext),dpi=400)
+    plt.close(fig)
+    for suffix in ['.png','.pdf']:
+        shutil.copy2(ROOT/(FIGSTEM+suffix),BASE/'figures/main'/(FIGSTEM+suffix))
+    for suffix in ['_validation.png','_validation.pdf']:
+        shutil.copy2(ROOT/(STEM+suffix),BASE/'figures/main'/(STEM+suffix))
+    for suffix in ['_data.npz','_checks.json']:shutil.copy2(ROOT/(STEM+suffix),BASE/'data'/(STEM+suffix))
+    print('Candidate:',ROOT/(FIGSTEM+'.pdf'),flush=True)
+
+def spectral_audit(data):
+    out={'eta_definition':'Gaussian standard deviation, not a physical scattering rate',
+         'display_dE':float(EGRID[1]),'eta_over_dE':ETA/float(EGRID[1]),'bulk':{},'grid':{},'finite':{}}
+    curves={}
+    for nk in (120,240,480,960):
+        de,w,r=bloch(nk)
+        curves[nk]={eta:broaden(de,w,eta) for eta in (.025,.055,.10)}
+        print('shape audit nk',nk,flush=True)
+    for nk in (120,240,480):
+        for eta in (.025,.055,.10):
+            c=curves[nk][eta];ref=curves[960][eta];diff=c-ref
+            out['bulk'][f'nk{nk}_eta{eta}']=dict(max_abs=float(abs(diff).max()),
+                relative_L1=float(np.trapezoid(abs(diff),EGRID)/np.trapezoid(abs(ref),EGRID)),
+                relative_Linf=float(abs(diff).max()/abs(ref).max()),peak=float(c.max()),
+                peak_energy=float(EGRID[np.argmax(c)]))
+    for key in ['benzene','coronene','flake96','flake1536','bulk']:
+        de=data[key+'_de'];w=data[key+'_w']
+        for dx in (.0005,.002):
+            eg=np.arange(0,12+dx/2,dx)
+            c=broaden_grid(de,w,eg,ETA)
+            diff=np.interp(EGRID,eg,c)-broaden(de,w)
+            out['grid'][f'{key}_dE{dx}']=dict(max_abs=float(abs(diff).max()),
+                relative_Linf=float(abs(diff).max()/max(abs(broaden(de,w)))))
+        idx=abs(w)>1e-7
+        lines=np.unique(np.round(de[idx],8))
+        out['finite'][key]=dict(strong_transition_threshold=1e-7,distinct_lines=len(lines),
+            median_line_spacing=float(np.median(np.diff(lines))),max_transition=float(de.max()),
+            minimum=float(de.min()),display_min=float(broaden(de,w).min()),display_max=float(broaden(de,w).max()))
+    fig,axs=plt.subplots(2,3,figsize=(10.8,5.6),sharex='col')
+    fig.subplots_adjust(left=.075,right=.99,bottom=.11,top=.94,wspace=.36,hspace=.20)
+    for i,eta in enumerate((.025,.055,.10)):
+        for key,c in [('flake96','#009988'),('flake1536','#ee7733')]:
+            axs[0,i].plot(EGRID,broaden(data[key+'_de'],data[key+'_w'],eta),color=c,lw=1,label=key.replace('flake','N='))
+        axs[0,i].plot(EGRID,curves[960][eta],color='.15',ls='--',lw=1,label='Bulk 960')
+        axs[0,i].set_title(r'$\eta/t_1=$'+str(eta),loc='left',fontsize=11)
+        for nk,c in [(120,'#cc3311'),(240,'#009988'),(480,'#0077bb'),(960,'.15')]:
+            axs[1,i].plot(EGRID,curves[nk][eta],lw=1,ls='--' if nk==960 else '-',color=c,label=str(nk))
+        axs[0,i].set_xlim(-.15,11);axs[1,i].set_ylim(-.025,.68)
+        axs[1,i].set_xlabel(r'$E/t_1$')
+        for ax in axs[:,i]:ax.axhline(0,color='.65',lw=.5)
+    axs[0,0].set_ylabel(r'$t_1\mathcal{C}(E)$');axs[1,0].set_ylabel(r'Bulk $t_1\mathcal{C}(E)$')
+    axs[0,0].legend(fontsize=7,frameon=False,loc='lower right');axs[1,0].legend(title='$k$ mesh',fontsize=7,frameon=False,loc='upper right')
+    for ext in ('png','pdf'):fig.savefig(ROOT/(STEM+'_spectral_audit.'+ext),dpi=300)
+    plt.close(fig)
+    (ROOT/(STEM+'_spectral_audit.json')).write_text(json.dumps(out,indent=2))
+    np.savez_compressed(ROOT/(STEM+'_spectral_audit.npz'),Egrid=EGRID,**{f'nk{nk}_eta{eta}':c for nk,dd in curves.items() for eta,c in dd.items()})
+    for suffix in ('_spectral_audit.json','_spectral_audit.npz'):shutil.copy2(ROOT/(STEM+suffix),BASE/'data'/(STEM+suffix))
+    for suffix in ('_spectral_audit.png','_spectral_audit.pdf'):shutil.copy2(ROOT/(STEM+suffix),BASE/'figures/main'/(STEM+suffix))
+    print(json.dumps(out['bulk'],indent=2),flush=True)
+
+if __name__=='__main__':
+    if '--size-comparison' in sys.argv:
+        size_comparison();sys.exit(0)
+    elif '--layout-only' in sys.argv:
+        data=dict(np.load(ROOT/(STEM+'_data.npz')));report=json.loads((ROOT/(STEM+'_checks.json')).read_text())
+        render(data,report,layout_only=True);sys.exit(0)
+    elif '--audit' in sys.argv:
+        spectral_audit(dict(np.load(ROOT/(STEM+'_data.npz'))));sys.exit(0)
+    elif '--render' in sys.argv:
+        data=dict(np.load(ROOT/(STEM+'_data.npz')));report=json.loads((ROOT/(STEM+'_checks.json')).read_text())
+        report['broadening_integrals']=broadening_checks(data)
+        (ROOT/(STEM+'_checks.json')).write_text(json.dumps(report,indent=2))
+    else:data,report=compute()
+    render(data,report)

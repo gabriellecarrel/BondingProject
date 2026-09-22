@@ -1,0 +1,138 @@
+"""Matched main-text and supplementary figures from the same saved SVD modes."""
+from pathlib import Path
+import json
+import socket
+import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm
+from matplotlib.ticker import LogLocator, NullLocator
+from bonding_modes_figure_20260919 import OUT, ATT, MATS, MESH, LABEL, COLOR, FONT, sha, input_path
+from bonding_full_mode_glyphs_20260919_r10 import draw
+
+STEM='bonding_matched_mode_figures_20260919_r3'
+
+
+def inputs():
+    result={}
+    for m in MATS:
+        p=OUT/f'bonding_mode_realspace_20260919_v2_{m}.npz'
+        z=dict(np.load(p));g=dict(np.load(input_path(m)))
+        meta=json.loads(input_path(m).with_suffix('.json').read_text())
+        assert np.all(g['eigenvalues']>=-1e-10*g['eigenvalues'][0])
+        np.testing.assert_allclose(z['probabilities'].sum(),1,atol=3e-12)
+        W=z['orbital_pair_probability'];oa=z['orbital_to_atom']
+        A=np.zeros((len(z['atom_symbols']),)*2)
+        np.add.at(A,(oa[:,None],oa[None,:]),W)
+        B=np.zeros_like(A)
+        np.add.at(B,(z['process_keys'][:,0],z['process_keys'][:,1]),z['probabilities'])
+        np.testing.assert_allclose(A,B,atol=3e-12)
+        np.testing.assert_allclose(A.sum(axis=1),z['occupied_marginal'],atol=3e-12)
+        np.testing.assert_allclose(A.sum(axis=0),z['empty_marginal'],atol=3e-12)
+        np.testing.assert_allclose(A.sum(),1,atol=3e-12)
+        result[m]=(z,g,meta,A,p)
+    return result
+
+
+def export(fig,name):
+    paths=[]
+    for ext,dpi in [('png',180),('pdf',600)]:
+        path=OUT/f'{STEM}_{name}.{ext}'
+        fig.savefig(path,dpi=dpi,facecolor='white')
+        paths.append(str(path))
+    plt.close(fig)
+    return paths
+
+
+def main_figure(data,records):
+    fig=plt.figure(figsize=(15.4,10.4))
+    grid=fig.add_gridspec(2,3,left=.078,right=.978,bottom=.095,top=.93,
+                         width_ratios=[1,1.12,1.12],hspace=.38,wspace=.28)
+    ax=fig.add_subplot(grid[0,0]);bx=fig.add_subplot(grid[1,0])
+    for m in MATS:
+        z,g,meta,A,path=data[m]
+        ev=np.maximum(g['eigenvalues'],0);fraction=ev/ev.sum()
+        rank=np.arange(1,len(ev)+1);positive=fraction>0
+        ax.plot(rank[positive],fraction[positive],color=COLOR[m],lw=2.5,label=LABEL[m])
+        ids=z['mode_indices']
+        ax.scatter(ids+1,fraction[ids],s=70,facecolors='white',edgecolors=COLOR[m],lw=2,zorder=5)
+        # Aggregate equal separations for an exact step CDF; all weights set its normalization.
+        r=np.linalg.norm(z['nuclear_displacement_A'],axis=1)
+        rr,inv=np.unique(np.round(r,10),return_inverse=True)
+        mass=np.bincount(inv,weights=z['probabilities'])
+        cumulative=np.cumsum(mass)
+        bx.step(np.r_[0,rr],100*np.r_[0,cumulative],where='post',color=COLOR[m],lw=2.5)
+        r90=float(z['r90_A'])
+        bx.scatter(r90,90,s=65,facecolors='white',edgecolors=COLOR[m],lw=2,zorder=5)
+        n90=int(np.searchsorted(np.cumsum(fraction),.9)+1)
+        records[m]={'mode_indices_zero_based':ids.tolist(),
+                    'selected_mode_metric_fraction':float(g['mode_metric_weights'][ids].sum()/g['mode_metric_weights'].sum()),
+                    'spectrum_normalization':'sum of eigenvalues of represented restricted Gram matrix',
+                    'modes_for_90_percent_represented_trace':n90,
+                    'r90_A':r90,'range_probability_within_40_A':float(z['probabilities'][r<=40].sum()),
+                    'atom_pair_probability':A.tolist(),'atom_labels':z['atom_symbols'].astype(str).tolist(),
+                    'realspace_source':str(path),'realspace_sha256':sha(path),
+                    'spectrum_source':str(input_path(m)),'spectrum_sha256':sha(input_path(m)),
+                    'restricted_over_full_metric':meta['selected_metric_fraction'],
+                    'full_trace':meta['full_trace'],'represented_trace':float(ev.sum())}
+    ax.set_xscale('log');ax.set_yscale('log');ax.set_xlim(.9,4000);ax.set_ylim(1e-8,1)
+    ax.set_xticks([1,10,100,1000]);ax.set_xticklabels(['1','10','100','1000'])
+    ax.set_yticks([1,1e-2,1e-4,1e-6,1e-8]);ax.xaxis.set_minor_locator(NullLocator())
+    ax.yaxis.set_minor_locator(NullLocator())
+    ax.set_xlabel('Mode index');ax.set_ylabel('Eigenvalue fraction')
+    ax.set_title('(a)  Mode spectrum',loc='left',fontsize=FONT,fontweight='normal',pad=16)
+    ax.legend(frameon=False,loc='lower left',fontsize=FONT,labelspacing=.18,handlelength=1.1)
+    bx.set_xlim(0,40);bx.set_ylim(0,103);bx.set_yticks([0,50,90,100]);bx.set_xticks([0,20,40])
+    bx.set_xlabel('Pair separation (Å)');bx.set_ylabel('Cumulative mode weight (%)')
+    bx.set_title('(b)  Spatial extent',loc='left',fontsize=FONT,fontweight='normal',pad=16)
+    for i,m in enumerate(MATS):
+        axis=fig.add_subplot(grid[i//2,1+i%2])
+        records[m]['glyph']=draw(axis,data[m][0],m,zoom=True)
+        axis.set_title(f'({chr(99+i)})  '+LABEL[m],loc='left',fontsize=FONT,fontweight='normal',pad=16)
+    return export(fig,'main')
+
+
+def site_labels(symbols):
+    result=[];counts={}
+    for s in symbols:
+        counts[s]=counts.get(s,0)+1
+        result.append(s if np.count_nonzero(symbols==s)==1 else f'{s}{counts[s]}')
+    return result
+
+
+def supplemental_figure(data):
+    fig,axs=plt.subplots(2,2,figsize=(15.4,14.4))
+    fig.subplots_adjust(left=.09,right=.86,bottom=.115,top=.945,wspace=.36,hspace=.40)
+    cmap=plt.get_cmap('Blues').copy();cmap.set_under('white');cmap.set_bad('white')
+    norm=LogNorm(vmin=1e-6,vmax=1)
+    for i,(ax,m) in enumerate(zip(axs.flat,MATS)):
+        z,g,meta,A,path=data[m];labels=site_labels(z['atom_symbols'].astype(str));n=len(labels)
+        im=ax.imshow(np.ma.masked_less_equal(A,0),cmap=cmap,norm=norm,origin='upper',interpolation='nearest',rasterized=True)
+        ax.set_xticks(range(n));ax.set_yticks(range(n));ax.set_xticklabels(labels,rotation=90 if n>4 else 0)
+        ax.set_yticklabels(labels);ax.tick_params(length=0,pad=6)
+        ax.set_xlabel('Empty-side site');ax.set_ylabel('Occupied-side site')
+        ax.set_title(f'({chr(97+i)})  '+LABEL[m],loc='left',fontsize=FONT,fontweight='normal',pad=16)
+        if n<=2:
+            for r in range(n):
+                for c in range(n):
+                    ax.text(c,r,f'{100*A[r,c]:.1f}%',ha='center',va='center',fontsize=FONT,
+                            color='white' if A[r,c]>.025 else '#333333')
+        for spine in ax.spines.values():spine.set_visible(False)
+    cbax=fig.add_axes([.895,.225,.019,.54])
+    cb=fig.colorbar(im,cax=cbax,ticks=[1e-6,1e-4,1e-2,1],extend='min')
+    cb.ax.minorticks_off();cb.set_label('Atomic-pair mode weight',labelpad=15)
+    return export(fig,'supplement')
+
+
+if __name__=='__main__':
+    assert 'rqlab-studio' in socket.gethostname()
+    data=inputs();records={}
+    paths=main_figure(data,records)+supplemental_figure(data)
+    record={'script_sha256':sha(__file__),'glyph_script_sha256':sha(Path(__file__).with_name('bonding_full_mode_glyphs_20260919_r10.py')),
+            'materials':records,'paths':paths,'font':'DejaVu Sans, regular, 20 pt at 15.4 inch width',
+            'selection':'Whole numerical eigenvalue block with largest coherent candidate-metric contribution; each selected block here contains one mode.',
+            'scope':'Current restricted atom-pair-channel Gram construction, not historical orbital-pair eigenmodes. Periodic saved meshes; basis provenance and range convergence remain unresolved.',
+            'atomic_matrix_definition':'W_AB = sum_R sum_a_in_A,b_in_B sum_mu |T_ab^mu(R)|^2; normalized to one; same selected right singular mode as the glyph.'}
+    (OUT/f'{STEM}.json').write_text(json.dumps(record,indent=2)+'\n')
+    print(json.dumps({'paths':paths,'matrix_norms':{m:float(data[m][3].sum()) for m in MATS}},indent=2))

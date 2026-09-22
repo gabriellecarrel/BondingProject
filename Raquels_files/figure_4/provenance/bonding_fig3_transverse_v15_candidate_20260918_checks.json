@@ -1,0 +1,486 @@
+{
+  "host": "rqlab-studio.phys.columbia.edu",
+  "eta": 0.055,
+  "Ac": 2.598076211353316,
+  "records": {
+    "benzene": {
+      "N": 6,
+      "t2": 1,
+      "gap": 1.4641016151377537,
+      "integral": 2.2204460492503104e-16,
+      "eigenvalues": [
+        -2.732050807568877,
+        -2.0000000000000004,
+        -0.7320508075688772,
+        0.7320508075688765,
+        2.000000000000001,
+        2.7320508075688776
+      ],
+      "max_im_loop": 0.024056261216234418,
+      "spectral_lines": {
+        "5.4641016151": 0.403066525385382,
+        "2.7320508076": -0.8061330507707634,
+        "1.4641016151": 0.40306652538538157
+      },
+      "low_weight": 0.0,
+      "low_centroid": null,
+      "strongest_weight": 0.403066525385382,
+      "edge_gap_states": [
+        0.9999999999999997,
+        1.0
+      ],
+      "edge_definition": "degree<3 sites plus two nearest-neighbor graph layers",
+      "edge_fraction_sites": 1.0,
+      "optical_first_moment_per_area": -0.0469610812011528,
+      "full_moment_per_area": 4.657337836425755e-17,
+      "marker_sum": 3.487868498008631e-16,
+      "central_marker_C": 4.474937369385108e-17,
+      "max_site_marker": 5.773336718622666e-16,
+      "projector_match_original": 0.0
+    },
+    "coronene": {
+      "N": 24,
+      "t2": 1,
+      "gap": 1.464101615137753,
+      "integral": -1.6653345369377348e-16,
+      "eigenvalues": null,
+      "max_im_loop": null,
+      "spectral_lines": null,
+      "low_weight": 0.0,
+      "low_centroid": null,
+      "strongest_weight": -0.4806730088236288,
+      "edge_gap_states": [
+        1.0000000000000009,
+        0.9999999999999999
+      ],
+      "edge_definition": "degree<3 sites plus two nearest-neighbor graph layers",
+      "edge_fraction_sites": 1.0,
+      "optical_first_moment_per_area": -0.08576628168322616,
+      "full_moment_per_area": -1.897037520938538e-16,
+      "marker_sum": -2.353672812205332e-14,
+      "central_marker_C": -0.07525884676355735,
+      "max_site_marker": 1.0966474699268538,
+      "projector_match_original": 0.0
+    },
+    "flake96": {
+      "N": 96,
+      "t2": 1,
+      "gap": 0.901408592690675,
+      "integral": -8.881784197001252e-16,
+      "eigenvalues": null,
+      "max_im_loop": null,
+      "spectral_lines": null,
+      "low_weight": 0.0,
+      "low_centroid": null,
+      "strongest_weight": -0.5483707116379709,
+      "edge_gap_states": [
+        0.7667731156137371,
+        0.7667731156137372
+      ],
+      "edge_definition": "degree<3 sites plus two nearest-neighbor graph layers",
+      "edge_fraction_sites": 0.625,
+      "optical_first_moment_per_area": -0.14521263910712245,
+      "full_moment_per_area": 3.052656321191221e-17,
+      "marker_sum": -3.108624468950438e-14,
+      "central_marker_C": 0.379588634554631,
+      "max_site_marker": 1.7419729570271794,
+      "projector_match_original": 0.0
+    },
+    "flake216": {
+      "N": 216,
+      "t2": 1,
+      "gap": 0.48152842004195756,
+      "integral": 4.718447854656915e-16,
+      "eigenvalues": null,
+      "max_im_loop": null,
+      "spectral_lines": null,
+      "low_weight": -0.6222596716275858,
+      "low_centroid": 0.48152842004195756,
+      "strongest_weight": -0.6222596716275858,
+      "edge_gap_states": [
+        0.7080147994025929,
+        0.7080147994025925
+      ],
+      "edge_definition": "degree<3 sites plus two nearest-neighbor graph layers",
+      "edge_fraction_sites": 0.4444444444444444,
+      "optical_first_moment_per_area": -0.18185571468360956,
+      "full_moment_per_area": 6.102916563892065e-17,
+      "marker_sum": 6.927791673660977e-14,
+      "central_marker_C": 0.6563723254390028,
+      "max_site_marker": 3.41314652005836,
+      "projector_match_original": null
+    },
+    "flake384": {
+      "N": 384,
+      "t2": 1,
+      "gap": 0.2938411183493972,
+      "integral": 2.498001805406602e-16,
+      "eigenvalues": null,
+      "max_im_loop": null,
+      "spectral_lines": null,
+      "low_weight": -0.6876232629126205,
+      "low_centroid": 0.2938411183493972,
+      "strongest_weight": -0.6876232629126205,
+      "edge_gap_states": [
+        0.6860004608924818,
+        0.6860004608924816
+      ],
+      "edge_definition": "degree<3 sites plus two nearest-neighbor graph layers",
+      "edge_fraction_sites": 0.34375,
+      "optical_first_moment_per_area": -0.20519011081086191,
+      "full_moment_per_area": 2.575871203346117e-16,
+      "marker_sum": 2.842170943040401e-14,
+      "central_marker_C": 0.824994819727359,
+      "max_site_marker": 5.454541964018133,
+      "projector_match_original": null
+    },
+    "flake864": {
+      "N": 864,
+      "t2": 1,
+      "gap": 0.1487376315413783,
+      "integral": 1.5265566588595902e-16,
+      "eigenvalues": null,
+      "max_im_loop": null,
+      "spectral_lines": null,
+      "low_weight": -0.7537552937185343,
+      "low_centroid": 0.13329547781549297,
+      "strongest_weight": -0.7792221592106815,
+      "edge_gap_states": [
+        0.6692642311968878,
+        0.6692642311968876
+      ],
+      "edge_definition": "degree<3 sites plus two nearest-neighbor graph layers",
+      "edge_fraction_sites": 0.2361111111111111,
+      "optical_first_moment_per_area": -0.2308886823313473,
+      "full_moment_per_area": 1.3696670766480388e-16,
+      "marker_sum": -4.121147867408581e-13,
+      "central_marker_C": 0.9626984415390252,
+      "max_site_marker": 10.152884905937567,
+      "projector_match_original": null
+    },
+    "flake1536": {
+      "N": 1536,
+      "t2": 1,
+      "gap": 0.0991718634057185,
+      "integral": -2.220446049250313e-16,
+      "eigenvalues": null,
+      "max_im_loop": null,
+      "spectral_lines": null,
+      "low_weight": -0.8127058156980582,
+      "low_centroid": 0.0903378724285959,
+      "strongest_weight": -0.8327909445918924,
+      "edge_gap_states": [
+        0.6610386072547799,
+        0.6610386072547804
+      ],
+      "edge_definition": "degree<3 sites plus two nearest-neighbor graph layers",
+      "edge_fraction_sites": 0.1796875,
+      "optical_first_moment_per_area": -0.2438131935981964,
+      "full_moment_per_area": -2.9081877666403944e-17,
+      "marker_sum": 2.0463630789890885e-12,
+      "central_marker_C": 0.9931259146891331,
+      "max_site_marker": 15.084958547695477,
+      "projector_match_original": null
+    },
+    "bulk120": {
+      "nk": 120,
+      "C": 1.000000000000178,
+      "C_plaquette": 1.0000000000000002,
+      "gap": 1.9999999999999998,
+      "optical_first_moment_per_area": -0.28354568052485163,
+      "full_M_mu0": -5.91810818744702e-18,
+      "dM_dmu": 0.15915494309192368
+    },
+    "bulk240": {
+      "nk": 240,
+      "C": 0.9999999999999998,
+      "C_plaquette": 1.0,
+      "gap": 1.9999999999999998,
+      "optical_first_moment_per_area": -0.2835456805248452,
+      "full_M_mu0": -5.734844173408574e-18,
+      "dM_dmu": 0.1591549430918953
+    },
+    "bulk480": {
+      "nk": 480,
+      "C": 0.9999999999999998,
+      "C_plaquette": 1.0000000000000002,
+      "gap": 1.9999999999999998,
+      "optical_first_moment_per_area": -0.2835456805248452,
+      "full_M_mu0": -5.960887361979425e-18,
+      "dM_dmu": 0.15915494309189532
+    }
+  },
+  "benzene_old_parameter_control": {
+    "N": 6,
+    "t2": 0.2,
+    "gap": 1.3071796769724497,
+    "integral": 1.6653345369377343e-16,
+    "eigenvalues": [
+      -2.000000000000001,
+      -1.3464101615137756,
+      -0.6535898384862248,
+      0.653589838486225,
+      1.3464101615137765,
+      1.9999999999999998
+    ],
+    "max_im_loop": 3.5913904684926785e-17,
+    "spectral_lines": {
+      "2.692820323": 0.40306652538538207,
+      "1.307179677": -0.4030665253853819
+    },
+    "low_weight": 0.0,
+    "low_centroid": null,
+    "strongest_weight": 0.40306652538538207,
+    "edge_gap_states": [
+      1.0000000000000002,
+      1.0000000000000002
+    ],
+    "edge_definition": "degree<3 sites plus two nearest-neighbor graph layers",
+    "edge_fraction_sites": 1.0,
+    "optical_first_moment_per_area": -0.04444444444444449,
+    "full_moment_per_area": 1.392665033522805e-17,
+    "marker_sum": 6.212827613272479e-16,
+    "central_marker_C": 7.971061544336902e-17,
+    "max_site_marker": 2.240427166992045e-16,
+    "projector_match_original": 0.0,
+    "max_spectral_line": 0.40306652538538207
+  },
+  "benzene_crossing": [
+    {
+      "N": 6,
+      "t2": 0.55,
+      "gap": 0.09474411167423517,
+      "integral": 4.440892098501163e-16,
+      "eigenvalues": [
+        -1.9999999999999998,
+        -1.9526279441628822,
+        -0.047372055837117406,
+        0.04737205583711777,
+        1.9526279441628827,
+        1.9999999999999996
+      ],
+      "max_im_loop": 2.0383427889742166e-17,
+      "spectral_lines": {
+        "3.9052558883": 0.4030665253853822,
+        "0.0947441117": -0.40306652538538174
+      },
+      "low_weight": -0.40306652538538174,
+      "low_centroid": 0.09474411167423517,
+      "strongest_weight": 0.4030665253853822,
+      "edge_gap_states": [
+        1.0000000000000002,
+        0.9999999999999998
+      ],
+      "edge_definition": "degree<3 sites plus two nearest-neighbor graph layers",
+      "edge_fraction_sites": 1.0,
+      "optical_first_moment_per_area": -0.12222222222222244,
+      "full_moment_per_area": 7.742225910882137e-17,
+      "marker_sum": 2.9364990468119118e-15,
+      "central_marker_C": 3.767530033670971e-16,
+      "max_site_marker": 6.539694057862204e-16,
+      "projector_match_original": 0.0
+    },
+    {
+      "N": 6,
+      "t2": 0.5772502691896259,
+      "gap": 0.00034641016151360003,
+      "integral": 7.216449660577887e-16,
+      "eigenvalues": [
+        -1.9999999999999996,
+        -1.999826794919243,
+        -0.0001732050807568538,
+        0.0001732050807567462,
+        1.9998267949192432,
+        1.9999999999999996
+      ],
+      "max_im_loop": 2.9890470884828336e-17,
+      "spectral_lines": {
+        "3.9996535898": 0.4030665253853823,
+        "0.0003464102": -0.40306652538538157
+      },
+      "low_weight": -0.40306652538538157,
+      "low_centroid": 0.00034641016151360003,
+      "strongest_weight": 0.4030665253853823,
+      "edge_gap_states": [
+        0.9999999999999998,
+        1.0
+      ],
+      "edge_definition": "degree<3 sites plus two nearest-neighbor graph layers",
+      "edge_fraction_sites": 1.0,
+      "optical_first_moment_per_area": -0.12827783759769482,
+      "full_moment_per_area": 6.169259466080681e-17,
+      "marker_sum": 3.790068953317554e-15,
+      "central_marker_C": 4.862660734322518e-16,
+      "max_site_marker": 9.770880064493186e-16,
+      "projector_match_original": 0.0
+    },
+    {
+      "N": 6,
+      "t2": 0.5774502691896258,
+      "gap": 0.0003464101615139436,
+      "integral": -4.440892098509086e-16,
+      "eigenvalues": [
+        -2.0001732050807575,
+        -2.0,
+        -0.00017320508075661145,
+        0.00017320508075733214,
+        1.9999999999999998,
+        2.0001732050807566
+      ],
+      "max_im_loop": 0.024056261216234442,
+      "spectral_lines": {
+        "4.0003464102": 0.40306652538538157,
+        "2.0001732051": -0.806133050770764,
+        "0.0003464102": 0.40306652538538207
+      },
+      "low_weight": 0.40306652538538207,
+      "low_centroid": 0.00034641016151394367,
+      "strongest_weight": -0.40306652538538207,
+      "edge_gap_states": [
+        1.0000000000000007,
+        1.0000000000000002
+      ],
+      "edge_definition": "degree<3 sites plus two nearest-neighbor graph layers",
+      "edge_fraction_sites": 1.0,
+      "optical_first_moment_per_area": -1.1111111111075963e-05,
+      "full_moment_per_area": -3.883987895383044e-17,
+      "marker_sum": -5.449794528138884e-16,
+      "central_marker_C": -6.992089639664743e-17,
+      "max_site_marker": 1.743934249004316e-16,
+      "projector_match_original": 0.0
+    },
+    {
+      "N": 6,
+      "t2": 0.6,
+      "gap": 0.07846096908265252,
+      "integral": -2.7755575615628987e-16,
+      "eigenvalues": [
+        -2.039230484541328,
+        -2.0000000000000013,
+        -0.03923048454132561,
+        0.03923048454132691,
+        2.0000000000000004,
+        2.0392304845413274
+      ],
+      "max_im_loop": 0.02405626121623446,
+      "spectral_lines": {
+        "4.0784609691": 0.40306652538538185,
+        "2.0392304845": -0.8061330507707642,
+        "0.0784609691": 0.40306652538538207
+      },
+      "low_weight": 0.40306652538538207,
+      "low_centroid": 0.07846096908265252,
+      "strongest_weight": -0.4030665253853822,
+      "edge_gap_states": [
+        1.0000000000000009,
+        1.0000000000000004
+      ],
+      "edge_definition": "degree<3 sites plus two nearest-neighbor graph layers",
+      "edge_fraction_sites": 1.0,
+      "optical_first_moment_per_area": -0.0025166367567081736,
+      "full_moment_per_area": -3.8708111220544334e-17,
+      "marker_sum": -2.397909592380934e-16,
+      "central_marker_C": -3.076519441452263e-17,
+      "max_site_marker": 9.591638369523736e-16,
+      "projector_match_original": 0.0
+    }
+  ],
+  "broadening_integrals": {
+    "benzene_eta0.025": {
+      "integral": 2.7755575615628914e-16,
+      "exact": 2.2204460492503104e-16
+    },
+    "benzene_eta0.055": {
+      "integral": 1.1102230246251565e-16,
+      "exact": 2.2204460492503104e-16
+    },
+    "benzene_eta0.1": {
+      "integral": 2.7755575615628914e-16,
+      "exact": 2.2204460492503104e-16
+    },
+    "coronene_eta0.025": {
+      "integral": -2.3592239273284576e-16,
+      "exact": -1.6653345369377348e-16
+    },
+    "coronene_eta0.055": {
+      "integral": -1.0408340855860843e-16,
+      "exact": -1.6653345369377348e-16
+    },
+    "coronene_eta0.1": {
+      "integral": -1.249000902703301e-16,
+      "exact": -1.6653345369377348e-16
+    },
+    "flake96_eta0.025": {
+      "integral": -1.2004286453759505e-15,
+      "exact": -8.881784197001252e-16
+    },
+    "flake96_eta0.055": {
+      "integral": -9.506284648352903e-16,
+      "exact": -8.881784197001252e-16
+    },
+    "flake96_eta0.1": {
+      "integral": -9.992007221626409e-16,
+      "exact": -8.881784197001252e-16
+    },
+    "flake216_eta0.025": {
+      "integral": 4.579669976578771e-16,
+      "exact": 4.718447854656915e-16
+    },
+    "flake216_eta0.055": {
+      "integral": 5.134781488891349e-16,
+      "exact": 4.718447854656915e-16
+    },
+    "flake216_eta0.1": {
+      "integral": 6.245004513516506e-16,
+      "exact": 4.718447854656915e-16
+    },
+    "flake384_eta0.025": {
+      "integral": 2.7755575615628914e-17,
+      "exact": 2.498001805406602e-16
+    },
+    "flake384_eta0.055": {
+      "integral": 2.3592239273284576e-16,
+      "exact": 2.498001805406602e-16
+    },
+    "flake384_eta0.1": {
+      "integral": 2.636779683484747e-16,
+      "exact": 2.498001805406602e-16
+    },
+    "flake864_eta0.025": {
+      "integral": 0.0,
+      "exact": 1.5265566588595902e-16
+    },
+    "flake864_eta0.055": {
+      "integral": 5.551115123125783e-17,
+      "exact": 1.5265566588595902e-16
+    },
+    "flake864_eta0.1": {
+      "integral": 0.0,
+      "exact": 1.5265566588595902e-16
+    },
+    "flake1536_eta0.025": {
+      "integral": -2.220446049250313e-16,
+      "exact": -2.220446049250313e-16
+    },
+    "flake1536_eta0.055": {
+      "integral": -4.440892098500626e-16,
+      "exact": -2.220446049250313e-16
+    },
+    "flake1536_eta0.1": {
+      "integral": -1.6653345369377348e-16,
+      "exact": -2.220446049250313e-16
+    },
+    "bulk_eta0.025": {
+      "integral": 0.9999999999999997,
+      "exact": 0.9999999999999998
+    },
+    "bulk_eta0.055": {
+      "integral": 0.9999999999999998,
+      "exact": 0.9999999999999998
+    },
+    "bulk_eta0.1": {
+      "integral": 0.9999999999999994,
+      "exact": 0.9999999999999998
+    }
+  }
+}

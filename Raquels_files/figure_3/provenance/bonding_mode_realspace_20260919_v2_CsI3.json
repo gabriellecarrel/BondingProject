@@ -1,0 +1,70 @@
+{
+  "host": "rqlab-studio.phys.columbia.edu",
+  "material": "CsI3",
+  "mesh": 12,
+  "mode_indices_zero_based": [
+    1
+  ],
+  "mode_metric_fraction_of_selected": 0.9389132095085662,
+  "right_mode_norms": [
+    1.0000000000000007
+  ],
+  "real_space_mode_norms": [
+    1.0000000000000013
+  ],
+  "band_phase_gauge_max_error": 9.185998491078887e-19,
+  "orbital_isometry_max_error": 8.673617379884035e-19,
+  "distance_quantiles_A": {
+    "50": 3.017980789302132,
+    "90": 5.919573490496007,
+    "99": 9.797326048180334
+  },
+  "endpoint_total_variation": 0.4662343054147434,
+  "outer_two_Fourier_shell_probability": 5.802244841561143e-14,
+  "portrait_omitted_unpaired_boundary_probability": 0.0,
+  "unpaired_boundary_probability_retained": 8.372567184367535e-17,
+  "occupied_marginal": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.13335552903339265,
+    0.13335552903473288,
+    0.1333555290346565,
+    0.13335552903338324,
+    0.003265645183189497,
+    0.003265645183219974,
+    0.0032656451832210605,
+    0.003265645183189629,
+    0.11337882578220312,
+    0.11337882578333199,
+    0.11337882578326662,
+    0.11337882578219614
+  ],
+  "empty_marginal": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.05546020495486056,
+    0.055460204955417,
+    0.05546020495538552,
+    0.05546020495485704,
+    0.11982422153630763,
+    0.11982422153751109,
+    0.11982422153744444,
+    0.11982422153629946,
+    0.07471557350761517,
+    0.07471557350835754,
+    0.07471557350831522,
+    0.07471557350761067
+  ],
+  "total_probability": 1.0000000000000018,
+  "runtime_s": 5.809622049331665,
+  "source_sha256": {
+    "/Users/raquelqueiroz/Library/CloudStorage/GoogleDrive-rpa.queiroz@gmail.com/My Drive/Code/Bonding/bonding_mode_realspace_20260919_v2.py": "dea6b070df3ea5c7c3ddcd93086c0e07de1dcda62ed9e33d89fbc21ce612813b",
+    "/Users/raquelqueiroz/orlt_atlas_work/bonding_modes_20260919_v1_CsI3_mesh12.npz": "129a80b234c47ce17dd1921bafd5151139fae3c5b11556190bbbc2d90140487e"
+  },
+  "scope": "Right singular-mode occupied-empty relative-coordinate kernel, weighted within the brightest whole eigenvalue block. Uniform zero-q periodic mode, no localization of its center; no mode-range convergence claim.",
+  "formula": "w_s=u_s^dagger B(k)/sqrt(Nk*nocc*lambda_s); T_s,ab=sum_ov O_ao w_s,ov V_bv*; unitary FFT(k->R); normalized block probability=sum_s,mu lambda_s |T_s,ab^mu(R)|^2 /sum_s lambda_s."
+}

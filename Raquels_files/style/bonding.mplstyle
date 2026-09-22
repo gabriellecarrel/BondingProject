@@ -1,0 +1,69 @@
+# =============================================================================
+# bonding.mplstyle -- Bonding concept paper (quantum_metric Overleaf) figures.
+# Source of truth: GABI'S (Gabrielle Carrel) manuscript figures --
+#   images/Second_Draft_Images/benzene_coronene.png, Bond_Index_Part.png,
+#   cut_haldane_local_chern.png -- which the new Fig. 1/Fig. 2 must reproduce
+# (Raquel 2026-07-03). Extracted so every figure shares one grammar instead of
+# per-script rcParams.
+#
+# Gabi's grammar (read off the reference figures):
+#   - SANS-SERIF everywhere (her marker figure is matplotlib-default DejaVu
+#     Sans; the structural figures use a matching clean sans). NOT serif --
+#     the first extraction wrongly copied Fig. 1's inline serif rc.
+#   - usetex FALSE by construction; math via mathtext 'dejavusans' so math is
+#     sans too and renders identically on machines with/without LaTeX.
+#   - panel labels "a)", "b)" -- single parenthesis, regular weight, set by
+#     the scripts (not rc).
+#   - flat saturated node disks WITHOUT dark rims; plain black/gray bonds;
+#     labels as plain text next to objects, no boxes/frames; axes off.
+#   - coolwarm for the per-site curvature Omega^{xy}(d), boxed colorbar
+#     (cut_haldane_local_chern.png).
+#   - small base font (9pt): dense full-width (7.2-7.6 in) triptychs; per-role
+#     sizes (panel labels 11, notes 9, site indices 5.2-6.5) live in scripts.
+#   - pdf.fonttype 42: embed real (editable) fonts in the vector PDF.
+# CANNOT live here: the accent hexes (BONDING_INK/_D/_J/_FILL/_CELL) -- those
+# live in lab_style.py.
+# =============================================================================
+
+font.size:          9
+axes.labelsize:     9
+axes.titlesize:     10
+xtick.labelsize:    8
+ytick.labelsize:    8
+legend.fontsize:    9
+
+text.usetex:        False
+font.family:        sans-serif
+font.sans-serif:    DejaVu Sans, Helvetica, Arial
+mathtext.fontset:   dejavusans
+
+figure.facecolor:   white
+axes.facecolor:     white
+savefig.facecolor:  white
+
+axes.spines.top:    True
+axes.spines.right:  True
+axes.linewidth:     0.8
+
+axes.grid:          False
+
+xtick.direction:    out
+ytick.direction:    out
+xtick.major.width:  0.8
+ytick.major.width:  0.8
+xtick.major.size:   3
+ytick.major.size:   3
+
+lines.linewidth:    1.5
+lines.markersize:   5
+
+legend.frameon:     False
+
+figure.dpi:         150
+savefig.dpi:        300
+
+# embed real fonts -> editable vector PDF
+pdf.fonttype:       42
+
+# per-site curvature Omega^{xy}(d) is the recurring colored quantity
+image.cmap:         coolwarm

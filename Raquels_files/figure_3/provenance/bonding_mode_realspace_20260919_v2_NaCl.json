@@ -1,0 +1,42 @@
+{
+  "host": "rqlab-studio.phys.columbia.edu",
+  "material": "NaCl",
+  "mesh": 24,
+  "mode_indices_zero_based": [
+    0
+  ],
+  "mode_metric_fraction_of_selected": 0.9082844687454875,
+  "right_mode_norms": [
+    1.0000000000000007
+  ],
+  "real_space_mode_norms": [
+    1.0000000000000007
+  ],
+  "band_phase_gauge_max_error": 1.939479807224432e-18,
+  "orbital_isometry_max_error": 1.0842021724855044e-19,
+  "distance_quantiles_A": {
+    "50": 2.8471836281121172,
+    "90": 2.8471836281121172,
+    "99": 6.366496136883176
+  },
+  "endpoint_total_variation": 0.9289751025275124,
+  "outer_two_Fourier_shell_probability": 1.6920291046985124e-07,
+  "portrait_omitted_unpaired_boundary_probability": 0.0,
+  "unpaired_boundary_probability_retained": 1.8185191791020774e-08,
+  "occupied_marginal": [
+    0.031161817473386488,
+    0.9688381825266201
+  ],
+  "empty_marginal": [
+    0.9601369200008965,
+    0.039863079999105405
+  ],
+  "total_probability": 1.0000000000000007,
+  "runtime_s": 54.64551615715027,
+  "source_sha256": {
+    "/Users/raquelqueiroz/Library/CloudStorage/GoogleDrive-rpa.queiroz@gmail.com/My Drive/Code/Bonding/bonding_mode_realspace_20260919_v2.py": "dea6b070df3ea5c7c3ddcd93086c0e07de1dcda62ed9e33d89fbc21ce612813b",
+    "/Users/raquelqueiroz/orlt_atlas_work/bonding_modes_20260919_v1_NaCl_mesh24.npz": "66e2a59cb51bd41ea3c556f2dc3e0decbfa8ac8ea770ba55666fa0ece43dbb10"
+  },
+  "scope": "Right singular-mode occupied-empty relative-coordinate kernel, weighted within the brightest whole eigenvalue block. Uniform zero-q periodic mode, no localization of its center; no mode-range convergence claim.",
+  "formula": "w_s=u_s^dagger B(k)/sqrt(Nk*nocc*lambda_s); T_s,ab=sum_ov O_ao w_s,ov V_bv*; unitary FFT(k->R); normalized block probability=sum_s,mu lambda_s |T_s,ab^mu(R)|^2 /sum_s lambda_s."
+}
