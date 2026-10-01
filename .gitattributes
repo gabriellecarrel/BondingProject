@@ -1,1 +1,4 @@
 *.npy filter=lfs diff=lfs merge=lfs -text
+ORLT/**/COBICAR.lobster filter=lfs diff=lfs merge=lfs -text
+ORLT/**/COHPCAR.lobster filter=lfs diff=lfs merge=lfs -text
+ORLT/**/COOPCAR.lobster filter=lfs diff=lfs merge=lfs -text

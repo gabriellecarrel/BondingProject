@@ -1,0 +1,11 @@
+! lobsterin for NaCl, matched to NaCl/wannier90.win
+! Wannier projections:  Na:s,p   Cl:p   (7 functions per cell)
+! Wannier outer window: -5 to 18 eV absolute, E_F = -0.6989 eV (OUTCAR)
+!   -> -4.30 to 18.70 eV relative to E_F (LOBSTER energies are relative to E_F)
+!   This keeps the Cl 3p valence bands and drops Na 2p (-21.8 eV) and Cl 3s (-13.3 eV).
+basisSet pbeVaspFit2015
+basisfunctions Na 3s 3pq
+basisfunctions Cl 3p
+COHPstartEnergy -4.30
+COHPendEnergy 18.70
+cohpGenerator from 1.4 to 20

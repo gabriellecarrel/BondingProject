@@ -1,18 +1,18 @@
 
 FERMI_ENERGY = 5.9499
 #LWRITE_UNK = .TRUE.
-DIS_FROZ_MIN = -7
-DIS_FROZ_MAX = 8
+DIS_FROZ_MIN = -10
+DIS_FROZ_MAX = 6
 DIS_WIN_MIN = -15
 DIS_WIN_MAX = 15
 NUM_ITER = 0
+DIS_NUM_ITER = 1000
 WRITE_HR = TRUE
-write_xyz = true
 begin projections
 Ge:s,p
 Te:s,p
 end projections
-
+write_xyz = true
 # This part was generated automatically by VASP
 num_bands = 36
 num_wann = 8

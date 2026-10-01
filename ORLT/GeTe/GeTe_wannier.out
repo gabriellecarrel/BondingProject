@@ -1,0 +1,49 @@
+ running   12 mpi-ranks, with    1 threads/rank, on    1 nodes
+ distrk:  each k-point on   12 cores,    1 groups
+ distr:  one band on    1 cores,   12 groups
+ vasp.6.4.2 20Jul23 (build May 01 2025 16:49:15) complex                        
+  
+ POSCAR found type information on POSCAR GeTe
+ POSCAR found :  2 types and       2 ions
+ Reading from existing POTCAR
+ scaLAPACK will be used
+ Reading from existing POTCAR
+ LDA part: xc-table for Pade appr. of Perdew
+ -----------------------------------------------------------------------------
+|                                                                             |
+|           W    W    AA    RRRRR   N    N  II  N    N   GGGG   !!!           |
+|           W    W   A  A   R    R  NN   N  II  NN   N  G    G  !!!           |
+|           W    W  A    A  R    R  N N  N  II  N N  N  G       !!!           |
+|           W WW W  AAAAAA  RRRRR   N  N N  II  N  N N  G  GGG   !            |
+|           WW  WW  A    A  R   R   N   NN  II  N   NN  G    G                |
+|           W    W  A    A  R    R  N    N  II  N    N   GGGG   !!!           |
+|                                                                             |
+|     The number of bands has been changed from the values supplied in        |
+|     the INCAR file. This is a result of running the parallel version.       |
+|     The orbitals not found in the WAVECAR file will be initialized with     |
+|     random numbers, which is usually adequate. For correlated               |
+|     calculations, however, you should redo the groundstate calculation.     |
+|     I found NBANDS = 30. Now, NBANDS = 36.                                  |
+|                                                                             |
+ -----------------------------------------------------------------------------
+
+ found WAVECAR, reading the header
+ POSCAR, INCAR and KPOINTS ok, starting setup
+ FFT: planning ... GRIDC
+ FFT: planning ... GRID_SOFT
+ FFT: planning ... GRID
+ reading WAVECAR
+ the WAVECAR file was read successfully
+ initial charge from wavefunction
+ entering main loop
+       N       E                     dE             d eps       ncg     rms          rms(c)
+DAV:   1    -0.783940821766E+01   -0.78394E+01   -0.85575E-13 21456   0.319E-06    0.153E-08
+DAV:   2    -0.783940821765E+01    0.45475E-11   -0.46515E-14 14244   0.101E-06
+ Calling wannier_setup of wannier90 in library mode
+ Wannier90 mode
+ Computing MMN (overlap matrix elements)
+ Computing AMN (projections onto localized orbitals)
+ Write UNK files
+  Writing WANPROJ file
+   1 F= -.78394082E+01 E0= -.78394082E+01  d E =-.439045E-11
+ writing wavefunctions

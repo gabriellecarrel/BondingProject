@@ -1,0 +1,33 @@
+ENCUT  =  550        (Cut-off energy for plane wave basis set, in eV)
+PREC   = Accurate      (Accurate strictly avoids any aliasing or wrap around errors)
+ 
+Static Calculation
+ISMEAR =  0            (gaussian smearing method)
+SIGMA  =  0.05         (please check the width of the smearing)
+LORBIT =  11           (PAW radii for projected DOS)
+NELM   =  200           (Max electronic SCF steps)
+EDIFF  =  1E-08        (SCF energy convergence, in eV)
+ 
+#Wannier90
+LWANNIER90 = .TRUE.
+LWRITE_MMN_AMN = .TRUE.
+LWRITE_WANPROJ = .TRUE.
+LWRITE_UNK = .TRUE.
+NUM_WANN = 8 #1Ges 3Gep 1Tes 3Tep
+WANNIER90_WIN="
+FERMI_ENERGY = 5.9499
+#LWRITE_UNK = .TRUE.
+DIS_FROZ_MIN = -10
+DIS_FROZ_MAX = 6
+DIS_WIN_MIN = -15
+DIS_WIN_MAX = 15
+NUM_ITER = 0
+DIS_NUM_ITER = 1000
+WRITE_HR = TRUE
+begin projections
+Ge:s,p
+Te:s,p
+end projections
+"
+
+NBANDS = 30
