@@ -1,0 +1,37 @@
+% Individual fluctuations shown in Figure 2(e-h), position-resolved cluster runs (min_hopping_norm 1e-4).
+% Sources: <RUN>/top_fluctuations.csv (top_fluctuations_pr.py); GeTe four-center row from
+% validate_4center.py (all hops on bonds up to 7 A).  Requires \usepackage{booktabs}.
+\begin{table}[htbp]
+\centering
+\caption{\textbf{Individual fluctuations shown in Figure~2(e--h).} Sites are listed in the order
+$1$--$2$--$3$--$4$ of the fluctuation pattern (Eq.~(3) and Fig.~2(a--d)); primes mark distinct atoms
+of the same element. In CsI$_3$, I$_\mathrm{c}$ is the central iodine of the I$_3^-$ unit and I$_1$,
+I$_3$ are the terminal iodines at 3.02 and 2.90~\AA; in GeTe, the short and long Ge--Te bonds are
+2.84 and 3.26~\AA. The multiplicity is the number of symmetry-equivalent terms per primitive cell,
+with a loop and its reverse traversal counted separately; the contribution is their sum. All values
+are in \AA$^2$ per retained electron; $\mathrm{Tr}\,g$ is the total metric trace of each material
+(Table~S5).}
+\label{tab:fig2-fluctuations}
+\begin{tabular}{lcllcr}
+\toprule
+Material & $\mathrm{Tr}\,g$ (\AA$^2$) & Fluctuation & Sites & Multiplicity & Contribution (\AA$^2$) \\
+\midrule
+NaCl    & 0.368 & $\alpha\beta\beta\alpha$  & Cl--Na--Na--Cl & 6 & 0.336 \\
+\midrule
+Diamond & 0.769 & $\alpha\beta\beta\alpha$  & C--C$'$--C$'$--C & 8 & 0.405 \\
+        &       & $\alpha\beta\alpha\beta$  & C--C$'$--C--C$'$ & 8 & 0.298 \\
+\midrule
+CsI$_3$ & 0.677 & $\alpha\beta\beta\gamma$  & I$_1$--I$_\mathrm{c}$--I$_\mathrm{c}$--I$_3$ & 8 & 0.212 \\
+        &       & $\alpha\beta\beta\alpha$  & I$_1$--I$_\mathrm{c}$--I$_\mathrm{c}$--I$_1$ & 4 & 0.143 \\
+        &       & $\alpha\beta\beta\alpha$  & I$_3$--I$_\mathrm{c}$--I$_\mathrm{c}$--I$_3$ & 4 & 0.134 \\
+        &       & $\alpha\beta\alpha\beta$  & I$_\mathrm{c}$--I$_3$--I$_\mathrm{c}$--I$_3$ & 8 & 0.047 \\
+        &       & $\alpha\beta\gamma\alpha$ & I$_\mathrm{c}$--I$_1$--I$_3$--I$_\mathrm{c}$ & 8 & $-0.041$ \\
+\midrule
+GeTe    & 3.105 & $\alpha\beta\beta\alpha$  & Te--Ge--Ge--Te (short bond) & 3 & 0.796 \\
+        &       & $\alpha\beta\beta\alpha$  & Te--Ge--Ge--Te (long bond)  & 3 & 0.445 \\
+        &       & $\alpha\beta\beta\gamma$  & Te--Ge--Ge--Te$'$           & 6 & 0.372 \\
+        &       & $\alpha\beta\gamma\alpha$ & Te--Ge--Ge$'$--Te           & 6 & 0.332 \\
+        &       & $\alpha\beta\gamma\delta$ & Te--Ge--Ge$'$--Te$'$        & 6 & 0.210 \\
+\bottomrule
+\end{tabular}
+\end{table}

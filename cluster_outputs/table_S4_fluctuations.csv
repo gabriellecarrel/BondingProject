@@ -1,0 +1,14 @@
+material,Tr g (A^2),fluctuation,sites,multiplicity,contribution (A^2)
+NaCl,0.368,abba,Cl-Na-Na-Cl,6,0.336
+Diamond,0.769,abba,C-C'-C'-C,8,0.405
+Diamond,0.769,abab,C-C'-C-C',8,0.298
+CsI3,0.677,abbc,I1-Ic-Ic-I3,8,0.212
+CsI3,0.677,abba,I1-Ic-Ic-I1,4,0.143
+CsI3,0.677,abba,I3-Ic-Ic-I3,4,0.134
+CsI3,0.677,abab,Ic-I3-Ic-I3,8,0.047
+CsI3,0.677,abca,Ic-I1-I3-Ic,8,-0.041
+GeTe,3.105,abba,Te-Ge-Ge-Te (short bond),3,0.796
+GeTe,3.105,abba,Te-Ge-Ge-Te (long bond),3,0.445
+GeTe,3.105,abbc,Te-Ge-Ge-Te',6,0.372
+GeTe,3.105,abca,Te-Ge-Ge'-Te,6,0.332
+GeTe,3.105,abcd,Te-Ge-Ge'-Te',6,0.21
